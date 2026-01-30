@@ -114,6 +114,7 @@
         </aside>
 
         <div id="main-content" class="flex-1 flex flex-col md:ml-64 transition-all duration-300 relative w-full">
+            
             <header id="top-header" class="h-auto md:h-24 bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center px-8 py-5 z-10">
                 <div><h2 class="text-2xl font-bold tracking-tight" id="pageTitle">BERANDA</h2><p class="text-blue-200 text-xs md:text-sm font-medium">Sistem Informasi Pelaporan & Monitoring APAR</p></div>
                 <div class="mt-4 md:mt-0 flex flex-col items-end">
@@ -342,15 +343,9 @@
         </div>
     </div>
 
-    <div id="editHistoryModal" class="modal hidden">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-xl"><h3 class="font-bold text-lg mb-4">Edit Catatan Riwayat</h3><input type="hidden" id="editHistoryIndex"><div class="mb-3"><label class="block text-xs font-bold mb-1">Status</label><select id="editHistoryStatus" class="w-full border p-2 rounded"><option value="true">BAIK</option><option value="false">RUSAK</option></select></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Catatan</label><textarea id="editHistoryNote" class="w-full border p-2 rounded h-20"></textarea></div><div class="flex justify-end gap-2"><button onclick="document.getElementById('editHistoryModal').classList.add('hidden')" class="px-3 py-1 bg-gray-200 rounded text-sm">Batal</button><button onclick="app.saveEditedHistory()" class="px-3 py-1 bg-blue-600 text-white rounded text-sm font-bold">Update</button></div></div>
-    </div>
-    <div id="moveAparModal" class="modal hidden">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-xl border-t-4 border-orange-500"><h3 class="font-bold text-lg mb-4 text-orange-600"><i class="fa-solid fa-truck-fast"></i> Pindahkan APAR</h3><div class="mb-3"><label class="block text-xs font-bold mb-1 text-gray-500">Lokasi Sekarang:</label><div id="moveCurrentLoc" class="font-bold text-sm bg-gray-100 p-2 rounded text-gray-700"></div></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Pindah ke Ruangan Baru:</label><input type="text" id="moveNewLoc" class="w-full border p-2 rounded font-bold" placeholder="Nama Ruangan Baru..."></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Petugas:</label><input type="text" id="movePetugas" class="w-full border p-2 rounded" placeholder="Nama Anda"></div><div class="flex justify-end gap-2"><button onclick="document.getElementById('moveAparModal').classList.add('hidden')" class="px-3 py-1 bg-gray-200 rounded text-sm">Batal</button><button onclick="app.submitMove()" class="px-3 py-1 bg-orange-600 text-white rounded text-sm font-bold shadow">Simpan & Pindahkan</button></div></div>
-    </div>
-    <div id="tindakLanjutModal" class="modal hidden">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-xl border-t-4 border-yellow-500"><h3 class="font-bold text-lg mb-4 text-yellow-700"><i class="fa-solid fa-wrench"></i> Tindak Lanjut Perbaikan</h3><div class="mb-4"><label class="block text-xs font-bold mb-1">Tindakan yang dilakukan:</label><textarea id="tlNote" class="w-full border p-2 rounded h-24" placeholder="Cth: APAR dibawa ke workshop untuk isi ulang/perbaikan seal..."></textarea></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Oleh:</label><input type="text" id="tlPetugas" class="w-full border p-2 rounded" placeholder="Nama Teknisi"></div><div class="flex justify-end gap-2"><button onclick="document.getElementById('tindakLanjutModal').classList.add('hidden')" class="px-3 py-1 bg-gray-200 rounded text-sm">Batal</button><button onclick="app.submitTindakLanjut()" class="px-3 py-1 bg-green-600 text-white rounded text-sm font-bold">Simpan & Ubah Jadi Baik</button></div></div>
-    </div>
+    <div id="editHistoryModal" class="modal hidden"><div class="bg-white p-6 rounded-lg w-96 shadow-xl"><h3 class="font-bold text-lg mb-4">Edit Catatan Riwayat</h3><input type="hidden" id="editHistoryIndex"><div class="mb-3"><label class="block text-xs font-bold mb-1">Status</label><select id="editHistoryStatus" class="w-full border p-2 rounded"><option value="true">BAIK</option><option value="false">RUSAK</option></select></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Catatan</label><textarea id="editHistoryNote" class="w-full border p-2 rounded h-20"></textarea></div><div class="flex justify-end gap-2"><button onclick="document.getElementById('editHistoryModal').classList.add('hidden')" class="px-3 py-1 bg-gray-200 rounded text-sm">Batal</button><button onclick="app.saveEditedHistory()" class="px-3 py-1 bg-blue-600 text-white rounded text-sm font-bold">Update</button></div></div></div>
+    <div id="moveAparModal" class="modal hidden"><div class="bg-white p-6 rounded-lg w-96 shadow-xl border-t-4 border-orange-500"><h3 class="font-bold text-lg mb-4 text-orange-600"><i class="fa-solid fa-truck-fast"></i> Pindahkan APAR</h3><div class="mb-3"><label class="block text-xs font-bold mb-1 text-gray-500">Lokasi Sekarang:</label><div id="moveCurrentLoc" class="font-bold text-sm bg-gray-100 p-2 rounded text-gray-700"></div></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Pindah ke Ruangan Baru:</label><input type="text" id="moveNewLoc" class="w-full border p-2 rounded font-bold" placeholder="Nama Ruangan Baru..."></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Petugas:</label><input type="text" id="movePetugas" class="w-full border p-2 rounded" placeholder="Nama Anda"></div><div class="flex justify-end gap-2"><button onclick="document.getElementById('moveAparModal').classList.add('hidden')" class="px-3 py-1 bg-gray-200 rounded text-sm">Batal</button><button onclick="app.submitMove()" class="px-3 py-1 bg-orange-600 text-white rounded text-sm font-bold shadow">Simpan & Pindahkan</button></div></div></div>
+    <div id="tindakLanjutModal" class="modal hidden"><div class="bg-white p-6 rounded-lg w-96 shadow-xl border-t-4 border-yellow-500"><h3 class="font-bold text-lg mb-4 text-yellow-700"><i class="fa-solid fa-wrench"></i> Tindak Lanjut Perbaikan</h3><div class="mb-4"><label class="block text-xs font-bold mb-1">Tindakan yang dilakukan:</label><textarea id="tlNote" class="w-full border p-2 rounded h-24" placeholder="Cth: APAR dibawa ke workshop untuk isi ulang/perbaikan seal..."></textarea></div><div class="mb-4"><label class="block text-xs font-bold mb-1">Oleh:</label><input type="text" id="tlPetugas" class="w-full border p-2 rounded" placeholder="Nama Teknisi"></div><div class="flex justify-end gap-2"><button onclick="document.getElementById('tindakLanjutModal').classList.add('hidden')" class="px-3 py-1 bg-gray-200 rounded text-sm">Batal</button><button onclick="app.submitTindakLanjut()" class="px-3 py-1 bg-green-600 text-white rounded text-sm font-bold">Simpan & Ubah Jadi Baik</button></div></div></div>
     <div id="labelPrintArea" class="hidden bg-white p-4 border border-gray-800 w-[300px] text-center mx-auto"><h2 class="text-lg font-bold uppercase mb-1 border-b border-black pb-1">KARTU INSPEKSI APAR</h2><h3 class="text-xs mb-2">RSJMM BOGOR</h3><div id="printQrContainer" class="flex justify-center my-2"></div><div class="text-xl font-black my-1" id="printLabelKode"></div><div class="text-sm italic" id="printLabelLokasi"></div><div class="text-[10px] mt-2 border-t pt-1">Scan untuk update status & cek riwayat</div></div><div id="printAllArea" class="hidden"></div>
 
     <script>
@@ -360,11 +355,26 @@
         const app = {
             data: { apars: [], checks: [], movements: [], dismissed: JSON.parse(localStorage.getItem('dismissed')) || [], months: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"], fullMonths: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], currentPage: 1, itemsPerPage: 10, currentDetailId: null, historyToEdit: null, pendingScanAction: null, pendingScanId: null },
             
+            // --- Helper: Format Photo URL ---
+            formatPhotoUrl: function(url) {
+                if (!url) return '';
+                // Convert Google Drive view links to direct image links
+                const driveRegex = /\/d\/([a-zA-Z0-9_-]+)/;
+                const match = url.match(driveRegex);
+                if (match && match[1]) {
+                    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                }
+                return url;
+            },
+
             handleLogin: async function(e) { 
                 e.preventDefault(); const u = document.getElementById('loginUser').value; const p = document.getElementById('loginPass').value; this.toggleLoading(true, "Memeriksa Database...");
                 try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) }); const j = await r.json();
                     if (j.status === 'success') { localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', j.role); localStorage.setItem('petugasName', j.petugasName); localStorage.setItem('petugasId', u); 
-                        if(j.photoUrl) localStorage.setItem('petugasPhoto', j.photoUrl);
+                        
+                        // SAVE PHOTO URL TO LOCAL STORAGE
+                        if(j.photoUrl) localStorage.setItem('petugasPhoto', this.formatPhotoUrl(j.photoUrl));
+                        else localStorage.removeItem('petugasPhoto'); // Clear if empty
                         
                         if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
                         if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } this.data.pendingScanAction = null; document.getElementById('main-app').classList.remove('hidden'); this.showChecklistForm(this.data.pendingScanId); } else { this.init(); }
@@ -383,17 +393,17 @@
                 
                 document.getElementById('login-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden');
                 
-                // UPDATE HEADER INFO
+                // UPDATE HEADER INFO & PHOTO
                 const userName = localStorage.getItem('petugasName') || 'User';
                 document.getElementById('headerUserName').innerText = userName;
                 
-                // UPDATE PHOTO
                 const photoUrl = localStorage.getItem('petugasPhoto');
                 const defaultUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ffffff&color=2563eb`;
                 const finalUrl = (photoUrl && photoUrl.trim() !== "") ? photoUrl : defaultUrl;
+                
                 document.getElementById('headerProfileImg').src = finalUrl;
                 document.getElementById('profilePageImg').src = finalUrl;
-
+                
                 const now = new Date();
                 const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
                 const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -425,6 +435,7 @@
             resetDatabase: async function() { if(localStorage.getItem('userRole') !== 'Admin') { alert('Hanya ADMIN!'); return; } const p = prompt("Password ADMIN:"); if (p === "admin123") { if(confirm("YAKIN HAPUS SEMUA?")) { const s = await this.sendData({ action: "resetDatabase" }); if(s) { localStorage.removeItem('cached_apars'); localStorage.removeItem('cached_checks'); localStorage.removeItem('dismissed'); alert("Reset Berhasil."); location.reload(); } } } else if (p!==null) { alert("Password Salah!"); } },
 
             changePage: function(d) { this.data.currentPage += d; this.renderDashboard(); },
+            
             renderDashboard: function() {
                 const tb = document.getElementById('aparTableBody'); const em = document.getElementById('emptyState'); tb.innerHTML = '';
                 const yEl = document.getElementById('yearFilter'); const mEl = document.getElementById('monthFilter');
