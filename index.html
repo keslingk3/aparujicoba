@@ -13,9 +13,12 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* SHAKE ANIMATION FOR LOADING */
         @keyframes shake { 
-            0% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 
-            50% { transform: rotate(0deg); } 75% { transform: rotate(15deg); } 
+            0% { transform: rotate(0deg); } 
+            25% { transform: rotate(-15deg); } 
+            50% { transform: rotate(0deg); } 
+            75% { transform: rotate(15deg); } 
             100% { transform: rotate(0deg); } 
         }
         .animate-shake { animation: shake 0.5s infinite ease-in-out; }
@@ -29,7 +32,11 @@
         .capturing .no-print { display: none !important; }
         .capturing { border-radius: 0 !important; border: 1px solid #ddd; }
         
+        /* PUBLIC MODE: HIDE ADMIN ELEMENTS */
         body.public-mode .admin-only { display: none !important; }
+
+        /* SCAN MODE: HIDE HEADER/NAV ON MOBILE SCAN */
+        body.scan-mode nav { display: none !important; }
         
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -37,8 +44,11 @@
             display: none; justify-content: center; align-items: center; flex-direction: column;
         }
         #toast-msg { display: none; transition: opacity 0.5s ease; }
+        
+        /* Modal Style */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
         
+        /* PRINT STYLING */
         @media print {
             body * { visibility: hidden; }
             body.printing-label #labelPrintArea, body.printing-label #labelPrintArea * { visibility: visible; }
@@ -118,12 +128,24 @@
                 </div>
                 
                 <div class="relative flex items-center gap-3 admin-only">
-                    <div id="clockDisplay" class="hidden md:block text-sm font-mono font-bold bg-red-800 px-3 py-1 rounded text-red-100 border border-red-600 shadow-inner">--:--:--</div>
-                    <button id="btnSync" onclick="app.syncOfflineData()" class="hidden bg-yellow-400 text-red-900 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 shadow animate-pulse"><i class="fa-solid fa-rotate"></i> <span id="syncCount">0</span></button>
+                    <div id="clockDisplay" class="hidden md:block text-sm font-mono font-bold bg-red-800 px-3 py-1 rounded text-red-100 border border-red-600 shadow-inner">
+                        --:--:--
+                    </div>
+
+                    <button id="btnSync" onclick="app.syncOfflineData()" class="hidden bg-yellow-400 text-red-900 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 shadow animate-pulse">
+                        <i class="fa-solid fa-rotate"></i> <span id="syncCount">0</span>
+                    </button>
+
                     <div class="relative z-[70]">
-                        <button id="btnNotif" onclick="app.toggleNotifications(event)" class="relative p-2 rounded-full hover:bg-red-800 transition focus:outline-none"><i class="fa-solid fa-bell text-xl"></i><span id="notifBadge" class="hidden absolute top-0 right-0 bg-yellow-400 text-red-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-red-700 shadow-sm animate-pulse">0</span></button>
+                        <button id="btnNotif" onclick="app.toggleNotifications(event)" class="relative p-2 rounded-full hover:bg-red-800 transition focus:outline-none">
+                            <i class="fa-solid fa-bell text-xl"></i>
+                            <span id="notifBadge" class="hidden absolute top-0 right-0 bg-yellow-400 text-red-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-red-700 shadow-sm animate-pulse">0</span>
+                        </button>
                         <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white text-gray-800 rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-[80]">
-                            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 font-bold text-sm text-gray-600 flex justify-between items-center"><span>Notifikasi Prioritas</span><button onclick="app.checkNotifications()" class="text-xs text-blue-600 hover:text-blue-800 font-normal"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button></div>
+                            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 font-bold text-sm text-gray-600 flex justify-between items-center">
+                                <span>Notifikasi Prioritas</span>
+                                <button onclick="app.checkNotifications()" class="text-xs text-blue-600 hover:text-blue-800 font-normal"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                            </div>
                             <div id="notifList" class="max-h-80 overflow-y-auto notif-scroll p-0"></div>
                         </div>
                     </div>
@@ -233,6 +255,7 @@
 
             <div id="view-detail" class="view-section hidden fade-in">
                 <button onclick="app.navigate('dashboard')" class="admin-only mb-4 text-red-600 hover:text-red-800 font-semibold no-print flex items-center text-sm"><i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard</button>
+                
                 <div class="max-w-lg mx-auto">
                     <div id="captureArea" class="bg-white p-6 rounded-xl shadow-md border-t-4 border-red-500 print-area relative bg-white">
                         <div id="scanStatusBanner" class="hidden mb-4 p-4 rounded-lg text-center shadow-inner">
@@ -240,6 +263,7 @@
                             <div id="scanStatusText" class="text-2xl font-black"></div>
                             <div id="scanStatusDate" class="text-sm mt-1 font-medium"></div>
                         </div>
+                        
                         <div class="relative">
                             <h3 id="detailKode" class="text-2xl font-bold text-center text-gray-800 mb-1"></h3>
                             <div class="admin-only absolute top-0 right-0 flex flex-col gap-1 no-print">
@@ -247,6 +271,7 @@
                                 <button onclick="app.openMoveModal()" class="text-orange-500 hover:text-orange-700 text-xs font-bold border border-orange-200 p-1 rounded bg-orange-50"><i class="fa-solid fa-truck-fast"></i> Pindah</button>
                             </div>
                         </div>
+
                         <p id="detailLokasi" class="text-center text-gray-500 mb-6 font-medium text-sm"></p>
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Jenis:</span> <span id="detailJenis" class="font-bold text-gray-800"></span></div>
@@ -255,19 +280,31 @@
                             <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Kadaluarsa:</span> <span id="detailExpired" class="font-bold text-red-600"></span></div>
                         </div>
                         <div class="mt-6">
-                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2 text-sm flex justify-between">Riwayat Pengecekan<span class="text-[10px] text-gray-400 font-normal self-center">Terbaru diatas</span></h4>
+                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2 text-sm flex justify-between">
+                                Riwayat Pengecekan
+                                <span class="text-[10px] text-gray-400 font-normal self-center">Terbaru diatas</span>
+                            </h4>
                             <div id="detailHistoryBody" class="space-y-3"></div>
                         </div>
+                        
                         <div class="mt-6">
-                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2 text-sm flex justify-between"><span class="flex items-center gap-1"><i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Riwayat Perpindahan</span></h4>
-                            <div id="movementHistoryBody" class="space-y-2"><div class="text-xs text-gray-400 italic text-center">Belum ada riwayat perpindahan.</div></div>
+                            <h4 class="font-bold text-gray-700 mb-3 border-b pb-2 text-sm flex justify-between">
+                                <span class="flex items-center gap-1"><i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Riwayat Perpindahan</span>
+                            </h4>
+                            <div id="movementHistoryBody" class="space-y-2">
+                                <div class="text-xs text-gray-400 italic text-center">Belum ada riwayat perpindahan.</div>
+                            </div>
                         </div>
+
                         <div class="mt-4 text-center text-[10px] text-gray-400 hidden show-on-capture">Sistem Monitoring APAR RSJMM Bogor</div>
                     </div>
+                    
                     <div id="tindakLanjutContainer" class="hidden admin-only mt-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-sm no-print">
-                        <p class="font-bold">Perlu Tindak Lanjut!</p><p class="text-sm">Status APAR ini Rusak. Segera lakukan perbaikan/penggantian.</p>
+                        <p class="font-bold">Perlu Tindak Lanjut!</p>
+                        <p class="text-sm">Status APAR ini Rusak. Segera lakukan perbaikan/penggantian.</p>
                         <button onclick="app.showTindakLanjutModal()" class="mt-2 bg-yellow-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-yellow-700">Input Tindak Lanjut</button>
                     </div>
+
                     <div class="mt-8 no-print space-y-3">
                         <button onclick="app.shareStatus('print')" class="admin-only w-full bg-gray-800 text-white py-3 rounded-lg font-bold shadow hover:bg-gray-900 transition flex justify-center items-center"><i class="fa-solid fa-print mr-2"></i> Cetak Status Terkini</button>
                         <button id="btnChecklistNow" class="admin-only w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow hover:bg-blue-700 transition"><i class="fa-solid fa-clipboard-check mr-2"></i> Input Ceklis Baru</button>
@@ -279,8 +316,10 @@
                 <div class="grid md:grid-cols-3 gap-6">
                     <div class="md:col-span-2 max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl border-t-4 border-blue-600 w-full">
                         <div class="mb-6 text-center"><h2 class="text-2xl font-bold text-gray-800">Form Ceklis Bulanan</h2></div>
+                        
                         <form onsubmit="app.submitChecklist(event)">
                             <input type="hidden" id="checkAparId">
+                            
                             <div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2">Nama Petugas Inspeksi</label><input type="text" id="inputPetugas" required class="w-full border rounded px-3 py-2 bg-gray-50 focus:outline-blue-500 font-semibold" placeholder="Masukkan nama Anda..."></div>
                             <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200"><label class="block text-gray-700 text-sm font-bold mb-2">Tanggal Pengecekan</label><input type="date" id="inputCheckDate" required class="w-full border border-blue-300 rounded px-3 py-2 focus:outline-blue-500 font-bold text-gray-700"></div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -298,11 +337,13 @@
                                 </div>
                             </div>
                             <div id="liveStatusBox" class="mb-6 p-4 rounded-lg border text-center transition-all duration-300"></div>
+                            
                             <div id="evidenceContainer" class="hidden mb-6 bg-red-50 p-4 rounded-lg border border-red-200">
                                 <label class="block text-red-700 text-sm font-bold mb-2"><i class="fa-solid fa-camera mr-1"></i> Foto Bukti Kerusakan (Wajib)</label>
                                 <input type="file" id="evidencePhoto" accept="image/*" capture="environment" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
                                 <p class="text-[10px] text-gray-500 mt-1">*Foto akan dikompres otomatis.</p>
                             </div>
+
                             <div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2">Catatan Tambahan</label><textarea id="inputNotes" class="w-full border rounded-lg px-3 py-2 focus:outline-blue-500 h-24 text-sm"></textarea></div>
                             <div class="flex justify-end gap-3"><button type="button" onclick="app.backToDetail()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded font-medium">Batal</button><button type="submit" class="bg-blue-600 text-white px-8 py-2.5 rounded shadow hover:bg-blue-700 font-bold tracking-wide">Simpan Hasil</button></div>
                         </form>
@@ -311,7 +352,9 @@
             </div>
         </main>
 
-        <footer class="bg-gray-200 text-center py-4 mt-auto border-t border-gray-300 no-print admin-only"><p class="text-sm text-gray-600 font-medium">Copyright by <span class="text-red-700 font-bold">@K3KL RSJMM</span> 2025</p></footer>
+        <footer class="bg-gray-200 text-center py-4 mt-auto border-t border-gray-300 no-print admin-only">
+            <p class="text-sm text-gray-600 font-medium">Copyright by <span class="text-red-700 font-bold">@K3KL RSJMM</span> 2025</p>
+        </footer>
     </div>
 
     <div id="editHistoryModal" class="modal hidden">
@@ -326,32 +369,79 @@
     <div id="labelPrintArea" class="hidden bg-white p-4 border border-gray-800 w-[300px] text-center mx-auto"><h2 class="text-lg font-bold uppercase mb-1 border-b border-black pb-1">KARTU INSPEKSI APAR</h2><h3 class="text-xs mb-2">RSJMM BOGOR</h3><div id="printQrContainer" class="flex justify-center my-2"></div><div class="text-xl font-black my-1" id="printLabelKode"></div><div class="text-sm italic" id="printLabelLokasi"></div><div class="text-[10px] mt-2 border-t pt-1">Scan untuk update status & cek riwayat</div></div><div id="printAllArea" class="hidden"></div>
 
     <script>
+        // ⚠️ PASTE URL GOOGLE APPS SCRIPT ANDA DI SINI:
         const API_URL = "https://script.google.com/macros/s/AKfycbz4ynjoTOYduGB0_o-z64dEDTzLquxesQWGzafyZEZQDtKc3ea_5D9BzBHoJuT4X6IazA/exec"; 
         
         const app = {
             data: { apars: [], checks: [], movements: [], dismissed: JSON.parse(localStorage.getItem('dismissed')) || [], months: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"], fullMonths: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], currentPage: 1, itemsPerPage: 10, currentDetailId: null, historyToEdit: null, pendingScanAction: null, pendingScanId: null },
             
+            // --- FIX 1: Login Handler yang Stabil ---
             handleLogin: async function(e) { 
-                e.preventDefault(); const u = document.getElementById('loginUser').value; const p = document.getElementById('loginPass').value; this.toggleLoading(true, "Memeriksa Database...");
-                try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) }); const j = await r.json();
-                    if (j.status === 'success') { localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', j.role); localStorage.setItem('petugasName', j.petugasName); if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
-                        if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { this.data.pendingScanAction = null; this.showChecklistForm(this.data.pendingScanId); document.getElementById('main-app').classList.remove('hidden'); } else { this.init(); }
-                    } else { alert(j.message || 'Login Gagal!'); }
-                } catch (err) { console.error(err); alert('Gagal terhubung ke server.'); } finally { this.toggleLoading(false); }
+                e.preventDefault(); 
+                const u = document.getElementById('loginUser').value; 
+                const p = document.getElementById('loginPass').value;
+                this.toggleLoading(true, "Memeriksa Database...");
+                
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'login', username: u, password: p })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        localStorage.setItem('isLoggedIn', 'true');
+                        localStorage.setItem('userRole', result.role);
+                        localStorage.setItem('petugasName', result.petugasName);
+                        if(result.petugasName) document.getElementById('inputPetugas').value = result.petugasName;
+                        
+                        document.getElementById('login-screen').classList.add('hidden');
+                        
+                        // Cek apakah user login dari menu Scan QR
+                        if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) {
+                            // PENTING: Pastikan data sudah siap sebelum membuka form
+                            if (this.data.apars.length === 0) {
+                                await this.fetchDataWithTimeout();
+                            }
+                            this.data.pendingScanAction = null;
+                            document.getElementById('main-app').classList.remove('hidden');
+                            this.showChecklistForm(this.data.pendingScanId);
+                        } else {
+                            this.init(); // Login normal dari dashboard
+                        }
+                    } else {
+                        alert(result.message || 'Login Gagal!');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal terhubung ke server (Network Error). Coba lagi.');
+                } finally {
+                    this.toggleLoading(false);
+                }
             },
+
             cancelLogin: function() { document.getElementById('login-screen').classList.add('hidden'); const scanId = new URLSearchParams(window.location.search).get('id'); if (scanId) { document.getElementById('scan-choice-screen').classList.remove('hidden'); } else { document.getElementById('login-screen').classList.remove('hidden'); } },
             handleLogout: function() { if(confirm("Yakin ingin keluar?")) { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userRole'); localStorage.removeItem('petugasName'); location.reload(); } },
             
             init: async function() {
-                const urlParams = new URLSearchParams(window.location.search); const scanId = urlParams.get('id');
-                // LOAD CACHE FIRST
-                const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
-                if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); } catch(e) {} }
-                
-                // IF SCAN MODE -> SHOW CHOICE IMMEDIATELY, FETCH IN BACKGROUND
+                const urlParams = new URLSearchParams(window.location.search);
+                const scanId = urlParams.get('id');
+
+                // LOAD CACHE AGAR UI MUNCUL CEPAT
+                const localApars = localStorage.getItem('cached_apars'); 
+                const localChecks = localStorage.getItem('cached_checks');
+                if (localApars) { 
+                    try { 
+                        this.data.apars = JSON.parse(localApars); 
+                        this.data.checks = JSON.parse(localChecks || "[]"); 
+                    } catch(e) {} 
+                }
+
+                // --- FIX 3: SCAN FLOW INSTAN ---
                 if (scanId) { 
+                    document.getElementById('scan-choice-screen').classList.remove('hidden');
+                    // Fetch data di background tanpa loading spinner yang mengganggu
                     this.fetchDataWithTimeout(); 
-                    document.getElementById('scan-choice-screen').classList.remove('hidden'); 
                     return; 
                 }
 
@@ -361,28 +451,66 @@
                 setInterval(() => { document.getElementById('clockDisplay').innerText = new Date().toLocaleTimeString('id-ID') + ' WIB'; }, 1000);
                 this.updateSyncButton(); window.addEventListener('online', () => this.updateSyncButton()); window.addEventListener('offline', () => this.updateSyncButton());
                 const savedPetugas = localStorage.getItem('petugasName'); if(savedPetugas) document.getElementById('inputPetugas').value = savedPetugas;
-                this.setupFilters(); this.renderDashboard(); this.fetchDataWithTimeout();
+                
+                this.setupFilters(); 
+                this.renderDashboard(); // Render awal dengan cache
+                this.fetchDataWithTimeout(); // Update data terbaru
             },
 
             handleScanOption: function(choice) {
                 const scanId = new URLSearchParams(window.location.search).get('id');
                 document.getElementById('scan-choice-screen').classList.add('hidden');
                 
+                // Tambahkan kelas CSS agar header hilang di mode scan
+                document.body.classList.add('scan-mode');
+                
                 if (choice === 'inspect') {
-                    if (localStorage.getItem('isLoggedIn')) { document.getElementById('main-app').classList.remove('hidden'); this.showChecklistForm(scanId); } 
-                    else { this.data.pendingScanAction = 'inspect'; this.data.pendingScanId = scanId; document.getElementById('login-screen').classList.remove('hidden'); }
+                    if (localStorage.getItem('isLoggedIn')) { 
+                        document.getElementById('main-app').classList.remove('hidden'); 
+                        this.showChecklistForm(scanId); 
+                    } else { 
+                        this.data.pendingScanAction = 'inspect'; 
+                        this.data.pendingScanId = scanId; 
+                        document.getElementById('login-screen').classList.remove('hidden'); 
+                    }
                 } else if (choice === 'history') {
-                    document.body.classList.add('public-mode'); document.getElementById('main-app').classList.remove('hidden');
-                    // Force wait if data not ready
-                    if(this.data.apars.length > 0) { this.showDetail(scanId); } 
-                    else { this.toggleLoading(true, "Memuat Data..."); this.fetchDataWithTimeout().then(() => { this.toggleLoading(false); this.showDetail(scanId); }); }
+                    document.body.classList.add('public-mode'); 
+                    document.getElementById('main-app').classList.remove('hidden');
+                    
+                    // Pastikan data ada sebelum show detail
+                    if(this.data.apars.length > 0) { 
+                        this.showDetail(scanId); 
+                    } else { 
+                        this.toggleLoading(true, "Memuat Data..."); 
+                        this.fetchDataWithTimeout().then(() => { 
+                            this.toggleLoading(false); 
+                            this.showDetail(scanId); 
+                        }); 
+                    }
                 }
             },
 
             fetchDataWithTimeout: async function() {
-                try { const r = await fetch(API_URL + "?action=getData"); const j = await r.json(); this.data.apars = j.apars || []; this.data.checks = j.checks || []; this.data.movements = j.movements || []; localStorage.setItem('cached_apars', JSON.stringify(this.data.apars)); localStorage.setItem('cached_checks', JSON.stringify(this.data.checks)); this.renderDashboard(); document.getElementById('statusOnlineBadge').innerText = "ONLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-green-500 text-white px-1 py-0.5 rounded align-top"; this.checkNotifications();
-                } catch (err) { console.error("Fetch Error:", err); document.getElementById('statusOnlineBadge').innerText = "OFFLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-gray-500 text-white px-1 py-0.5 rounded align-top"; }
+                try { 
+                    const r = await fetch(API_URL + "?action=getData"); 
+                    const j = await r.json(); 
+                    this.data.apars = j.apars || []; 
+                    this.data.checks = j.checks || []; 
+                    this.data.movements = j.movements || []; 
+                    localStorage.setItem('cached_apars', JSON.stringify(this.data.apars)); 
+                    localStorage.setItem('cached_checks', JSON.stringify(this.data.checks)); 
+                    this.renderDashboard(); 
+                    document.getElementById('statusOnlineBadge').innerText = "ONLINE"; 
+                    document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-green-500 text-white px-1 py-0.5 rounded align-top"; 
+                    this.checkNotifications();
+                } catch (err) { 
+                    console.error("Fetch Error:", err); 
+                    document.getElementById('statusOnlineBadge').innerText = "OFFLINE"; 
+                    document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-gray-500 text-white px-1 py-0.5 rounded align-top"; 
+                }
             },
+            
+            // --- FIX: SAFE DATA SENDING ---
             sendData: async function(p) {
                 if (!navigator.onLine) { this.saveToOfflineQueue(p); this.showToast("Tidak ada sinyal. Disimpan Offline.", "orange"); this.updateSyncButton(); return true; }
                 this.toggleLoading(true, "Menyimpan..."); try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) }); const j = await r.json(); if(j.status === 'success') { await this.fetchDataWithTimeout(); this.toggleLoading(false); this.showToast("Berhasil Disimpan!", "green"); return true; } else { throw new Error(j.message); } } catch (err) { this.toggleLoading(false); this.saveToOfflineQueue(p); this.showToast("Gagal kirim. Masuk antrean.", "orange"); this.updateSyncButton(); return true; }
@@ -393,11 +521,18 @@
             resetDatabase: async function() { if(localStorage.getItem('userRole') !== 'Admin') { alert('Hanya ADMIN!'); return; } const p = prompt("Password ADMIN:"); if (p === "admin123") { if(confirm("YAKIN HAPUS SEMUA?")) { const s = await this.sendData({ action: "resetDatabase" }); if(s) { localStorage.removeItem('cached_apars'); localStorage.removeItem('cached_checks'); localStorage.removeItem('dismissed'); alert("Reset Berhasil."); location.reload(); } } } else if (p!==null) { alert("Password Salah!"); } },
 
             changePage: function(d) { this.data.currentPage += d; this.renderDashboard(); },
+            
+            // --- FIX DASHBOARD DATA HILANG ---
             renderDashboard: function() {
                 const tb = document.getElementById('aparTableBody'); const em = document.getElementById('emptyState'); tb.innerHTML = '';
-                // SAFE GUARD: Jika filter belum ada di DOM (sangat jarang terjadi), pakai default
-                const yEl = document.getElementById('yearFilter'); const mEl = document.getElementById('monthFilter');
-                const sYear = yEl ? yEl.value : new Date().getFullYear(); const sMonth = mEl ? mEl.value : ""; 
+                
+                // SAFE GUARD: Pastikan elemen filter ada sebelum membaca value
+                const yEl = document.getElementById('yearFilter'); 
+                const mEl = document.getElementById('monthFilter');
+                
+                // Default ke tahun sekarang jika filter belum ready
+                const sYear = yEl && yEl.value ? yEl.value : new Date().getFullYear(); 
+                const sMonth = mEl ? mEl.value : ""; 
                 const search = document.getElementById('searchInput').value.toLowerCase();
                 
                 if (!this.data.apars || this.data.apars.length === 0) { em.classList.remove('hidden'); document.getElementById('paginationInfo').innerText = ""; return; } else { em.classList.add('hidden'); }
@@ -448,29 +583,37 @@
                     const rD = a.refillDate ? new Date(a.refillDate).toLocaleDateString('id-ID') : "-";
                     let b = parseFloat(String(a.berat).replace(',', '.')); if(isNaN(b)) b=0; 
                     
-                    // FIX TOMBOL MATA: Menggunakan String() pada ID di onclick
-                    tb.innerHTML += `<tr class="border-b border-gray-100 hover:bg-gray-50 transition"><td class="py-3 px-4 font-semibold text-gray-700">${a.kode}</td><td class="py-3 px-4 text-xs"><div class="font-bold text-gray-600">${a.lokasi}</div></td><td class="py-3 px-4 text-center text-xs"><b>${a.jenis}</b><br><span class="text-gray-500">${b} kg</span></td><td class="py-3 px-4 text-center text-xs text-gray-500">${rD}</td><td class="py-3 px-4 text-center text-xs">${eD}</td><td class="py-3 px-4 text-center">${bg}</td><td class="py-3 px-4 text-center flex justify-center space-x-2 admin-only"><button onclick="app.showChecklistForm('${a.id}')" class="w-8 h-8 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-sm" title="Ceklis"><i class="fa-solid fa-check text-xs"></i></button><button onclick="app.showDetail('${a.id}')" class="w-8 h-8 rounded bg-gray-50 text-gray-600 hover:bg-gray-600 hover:text-white transition shadow-sm" title="Detail"><i class="fa-solid fa-eye text-xs"></i></button><button onclick="app.printLabel('${a.id}')" class="w-8 h-8 rounded bg-gray-800 text-white hover:bg-black transition shadow-sm" title="QR Code"><i class="fa-solid fa-qrcode text-xs"></i></button><button onclick="app.deleteApar('${a.id}')" class="w-8 h-8 rounded bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition shadow-sm" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button></td></tr>`;
+                    // --- FIX 2: TOMBOL MATA & CEKLIS (STRING CONVERSION) ---
+                    // Menggunakan String(a.id) agar ID tipe angka tetap terbaca sebagai string di onclick
+                    tb.innerHTML += `<tr class="border-b border-gray-100 hover:bg-gray-50 transition"><td class="py-3 px-4 font-semibold text-gray-700">${a.kode}</td><td class="py-3 px-4 text-xs"><div class="font-bold text-gray-600">${a.lokasi}</div></td><td class="py-3 px-4 text-center text-xs"><b>${a.jenis}</b><br><span class="text-gray-500">${b} kg</span></td><td class="py-3 px-4 text-center text-xs text-gray-500">${rD}</td><td class="py-3 px-4 text-center text-xs">${eD}</td><td class="py-3 px-4 text-center">${bg}</td><td class="py-3 px-4 text-center flex justify-center space-x-2 admin-only">
+                        <button onclick="app.showChecklistForm('${String(a.id)}')" class="w-8 h-8 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-sm" title="Ceklis"><i class="fa-solid fa-check text-xs"></i></button>
+                        <button onclick="app.showDetail('${String(a.id)}')" class="w-8 h-8 rounded bg-gray-50 text-gray-600 hover:bg-gray-600 hover:text-white transition shadow-sm" title="Detail"><i class="fa-solid fa-eye text-xs"></i></button>
+                        <button onclick="app.printLabel('${String(a.id)}')" class="w-8 h-8 rounded bg-gray-800 text-white hover:bg-black transition shadow-sm" title="QR Code"><i class="fa-solid fa-qrcode text-xs"></i></button>
+                        <button onclick="app.deleteApar('${String(a.id)}')" class="w-8 h-8 rounded bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition shadow-sm" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button></td></tr>`;
                 });
             },
             renderDashboardMovements: function() { const c = document.getElementById('dashboardMovements'); c.innerHTML = ''; const m = [...this.data.movements].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5); if(m.length === 0) { c.innerHTML = '<div class="text-xs text-gray-400 italic text-center p-2">Belum ada riwayat perpindahan.</div>'; return; } m.forEach(x => { const a = this.data.apars.find(z => String(z.id) == String(x.aparId)); const k = a ? a.kode : 'APAR Terhapus'; c.innerHTML += `<div class="flex items-center gap-3 text-xs border-b border-gray-100 pb-2 p-1 hover:bg-orange-50 rounded"><div class="bg-orange-100 text-orange-600 p-1.5 rounded-full"><i class="fa-solid fa-arrow-right-arrow-left"></i></div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-gray-700">${k}</span><span class="text-[10px] text-gray-400">${new Date(x.timestamp).toLocaleDateString('id-ID')}</span></div><div class="flex items-center gap-1 mt-0.5"><span class="line-through text-red-400">${x.oldLocation}</span><i class="fa-solid fa-arrow-right text-[8px] text-gray-400"></i><span class="font-bold text-green-600">${x.newLocation}</span></div></div></div>`; }); },
             toggleNotifications: function(e) { e.stopPropagation(); document.getElementById('notifDropdown').classList.toggle('hidden'); },
             closeDropdown: function(e) { if (!document.getElementById('notifDropdown').contains(e.target) && !document.getElementById('btnNotif').contains(e.target)) { document.getElementById('notifDropdown').classList.add('hidden'); } },
-            checkNotifications: function() { const b = document.getElementById('notifBadge'); const l = document.getElementById('notifList'); l.innerHTML = ''; let c = 0; const t = new Date(); this.data.apars.forEach(a => { const e = new Date(a.expiredDate); const d = Math.ceil((e - t) / (1000 * 60 * 60 * 24)); if (d < 0 && !this.isDismissed('exp', a.id)) { c++; this.addNotifItem(l, 'bg-red-50 border-red-200', 'text-red-700', 'KADALUARSA', `APAR ${a.kode} expired!`, a.id, 'exp'); } else if (d < 30 && d >= 0 && !this.isDismissed('expwarn', a.id)) { c++; this.addNotifItem(l, 'bg-yellow-50 border-yellow-200', 'text-yellow-700', 'AKAN KADALUARSA', `APAR ${a.kode} expired dalam ${d} hari.`, a.id, 'expwarn'); } const lc = this.getLastCheck(a.id); if (lc && String(lc.isGood) === 'false' && !this.isDismissed('dmg', a.id)) { c++; this.addNotifItem(l, 'bg-orange-50 border-orange-200', 'text-orange-700', 'KONDISI RUSAK', `APAR ${a.kode} rusak.`, a.id, 'dmg'); } const cm = this.data.checks.some(k => String(k.aparId) == String(a.id) && k.month == t.getMonth() && k.year == t.getFullYear()); if (!cm && t.getDate() > 20 && !this.isDismissed('uncheck', a.id)) { c++; this.addNotifItem(l, 'bg-blue-50 border-blue-200', 'text-blue-700', 'BELUM DICEK', `APAR ${a.kode} belum dicek bulan ini.`, a.id, 'uncheck'); } }); if (c > 0) { b.classList.remove('hidden'); b.innerText = c; } else { b.classList.add('hidden'); l.innerHTML = '<div class="p-8 text-center text-sm text-gray-400 italic">Semua Aman!</div>'; } },
+            checkNotifications: function() { const b = document.getElementById('notifBadge'); const l = document.getElementById('notifList'); l.innerHTML = ''; let c = 0; const t = new Date(); this.data.apars.forEach(a => { const e = new Date(a.expiredDate); const d = Math.ceil((e - t) / (1000 * 60 * 60 * 24)); if (d < 0 && !this.isDismissed('exp', a.id)) { c++; this.addNotifItem(l, 'bg-red-50 border-red-200', 'text-red-700', 'KADALUARSA', `APAR ${a.kode} sudah lewat tanggal kadaluarsa!`, a.id, 'exp'); } else if (d < 30 && d >= 0 && !this.isDismissed('expwarn', a.id)) { c++; this.addNotifItem(l, 'bg-yellow-50 border-yellow-200', 'text-yellow-700', 'AKAN KADALUARSA', `APAR ${a.kode} expired dalam ${d} hari.`, a.id, 'expwarn'); } const lc = this.getLastCheck(a.id); if (lc && String(lc.isGood) === 'false' && !this.isDismissed('dmg', a.id)) { c++; this.addNotifItem(l, 'bg-orange-50 border-orange-200', 'text-orange-700', 'KONDISI RUSAK', `APAR ${a.kode} dilaporkan RUSAK. Butuh perbaikan.`, a.id, 'dmg'); } const cm = this.data.checks.some(k => String(k.aparId) == String(a.id) && k.month == t.getMonth() && k.year == t.getFullYear()); if (!cm && t.getDate() > 20 && !this.isDismissed('uncheck', a.id)) { c++; this.addNotifItem(l, 'bg-blue-50 border-blue-200', 'text-blue-700', 'BELUM DICEK', `APAR ${a.kode} belum dicek bulan ini.`, a.id, 'uncheck'); } }); if (c > 0) { b.classList.remove('hidden'); b.innerText = c; } else { b.classList.add('hidden'); l.innerHTML = '<div class="p-8 text-center text-sm text-gray-400 italic">Semua Aman!</div>'; } },
             addNotifItem: function(c, b, t, ti, m, i, ty) { c.innerHTML += `<div class="px-4 py-3 border-b ${b} flex justify-between items-start"><div><div class="text-[10px] font-bold ${t} uppercase mb-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>${ti}</div><div class="text-xs font-semibold text-gray-700">${m}</div></div><button onclick="app.dismissNotif('${ty}', '${i}')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>`; },
             dismissNotif: function(t, i) { this.data.dismissed.push(t + '_' + i); localStorage.setItem('dismissed', JSON.stringify(this.data.dismissed)); this.checkNotifications(); },
             isDismissed: function(t, i) { return this.data.dismissed.includes(t + '_' + i); },
             toggleLoading: function(s, t) { const o = document.getElementById('loadingOverlay'); if(s) { o.style.display = 'flex'; if(t) document.getElementById('loadingText').innerText = t; } else { o.style.display = 'none'; } },
             showToast: function(m, c) { let t = document.getElementById('toast-msg'); if(!t) { t=document.createElement('div'); t.id='toast-msg'; document.body.appendChild(t); } t.className = `fixed bottom-4 right-4 px-4 py-2 rounded bg-${c}-600 text-white text-sm shadow-lg z-50 fade-in`; t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none', 3000); },
             navigate: function(id) { if(id==='dashboard') { document.getElementById('editAparId').value = ""; document.getElementById('formTitle').innerText="Tambah APAR Baru"; document.getElementById('btnSaveApar').innerText="Simpan Data"; } document.querySelectorAll('.view-section').forEach(e=>e.classList.add('hidden')); document.getElementById(`view-${id}`).classList.remove('hidden'); if(id==='dashboard') this.renderDashboard(); },
-            setupFilters: function() { const y = document.getElementById('yearFilter'); const m = document.getElementById('monthFilter'); [2024,2025,2026,2027].forEach(yr => y.innerHTML += `<option value="${yr}" ${yr===new Date().getFullYear()?'selected':''}>${yr}</option>`); m.innerHTML = '<option value="">Semua Bulan</option>'; this.data.fullMonths.forEach((mn, i) => m.innerHTML += `<option value="${i}">${mn}</option>`); },
+            setupFilters: function() { const y = document.getElementById('yearFilter'); const m = document.getElementById('monthFilter'); if(!y) return; [2024,2025,2026,2027].forEach(yr => y.innerHTML += `<option value="${yr}" ${yr===new Date().getFullYear()?'selected':''}>${yr}</option>`); m.innerHTML = '<option value="">Semua Bulan</option>'; this.data.fullMonths.forEach((mn, i) => m.innerHTML += `<option value="${i}">${mn}</option>`); },
             getLastCheck: function(id) { return this.data.checks.filter(c => String(c.aparId) === String(id)).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0]; },
             updateLiveStatus: function() { const c = document.querySelectorAll('input[name="checkItem"]'); const all = Array.from(c).every(x => x.checked); const tj = !c[4].checked; const ib = !c[7].checked; let m = '', cl = '', pb = document.getElementById('evidenceContainer'); if (all) { m = '<div class="text-green-600 font-bold"><i class="fa-solid fa-check-circle text-2xl"></i><br>KONDISI BAIK</div>'; cl = 'border-green-300 bg-green-50'; pb.classList.add('hidden'); } else { pb.classList.remove('hidden'); if (tj || ib) { m = '<div class="text-red-600 font-bold"><i class="fa-solid fa-fire-extinguisher text-2xl"></i><br>APAR HARUS DIISI ULANG</div>'; cl = 'border-red-300 bg-red-50'; } else { m = '<div class="text-red-600 font-bold"><i class="fa-solid fa-triangle-exclamation text-2xl"></i><br>KONDISI RUSAK</div>'; cl = 'border-red-300 bg-red-50'; } } const b = document.getElementById('liveStatusBox'); b.innerHTML = m; b.className = `mb-6 p-4 rounded-lg border-2 text-center transition ${cl}`; },
             
-            // --- FIXED: SHOW DETAIL FUNCTION (FORCE STRING ID) ---
             showDetail: function(id) {
                 this.data.currentDetailId = id;
                 const apar = this.data.apars.find(a => String(a.id) === String(id)); 
-                if (!apar) { alert('Data APAR belum termuat sepenuhnya. Mohon tunggu sebentar atau refresh.'); return; }
+                if (!apar) { 
+                    alert('Sedang memuat data terbaru... Silakan tunggu sebentar dan coba lagi.');
+                    this.fetchDataWithTimeout();
+                    return; 
+                }
                 this.navigate('detail'); 
                 document.getElementById('detailKode').innerText = apar.kode; document.getElementById('detailLokasi').innerText = apar.lokasi; document.getElementById('detailJenis').innerText = apar.jenis; document.getElementById('detailBerat').innerText = apar.berat + ' kg'; document.getElementById('detailRefill').innerText = apar.refillDate ? new Date(apar.refillDate).toLocaleDateString('id-ID') : '-'; document.getElementById('detailExpired').innerText = new Date(apar.expiredDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); document.getElementById('btnChecklistNow').onclick = () => this.showChecklistForm(id);
                 const lC = this.getLastCheck(id); const sB = document.getElementById('scanStatusBanner'); const tL = document.getElementById('tindakLanjutContainer'); const iE = new Date(apar.expiredDate) < new Date();
@@ -487,9 +630,10 @@
             printLabel: function(id) { const a=this.data.apars.find(x=>String(x.id)==String(id)); if(!a)return; document.getElementById('printLabelKode').innerText=a.kode; document.getElementById('printLabelLokasi').innerText=a.lokasi; document.getElementById('printQrContainer').innerHTML=''; new QRCode(document.getElementById('printQrContainer'), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:120, height:120}); document.body.classList.add('printing-label'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-label');},500); },
             shareStatus: async function() { const el=document.getElementById('captureArea'); el.classList.add('capturing'); try { const cvs = await html2canvas(el, {scale:2}); const win = window.open(''); win.document.write(`<img src="${cvs.toDataURL()}">`); setTimeout(()=>win.print(),500); el.classList.remove('capturing'); } catch(e){alert('Gagal Print'); el.classList.remove('capturing');}},
             compressImage: function(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const maxWidth = 600; const scaleSize = maxWidth / img.width; canvas.width = maxWidth; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.5)); } } }); },
+            
+            // --- FIX 2: SUBMIT CHECKLIST (MEMASTIKAN ID TERSIMPAN) ---
             submitChecklist: async function(e) { e.preventDefault(); const id = document.getElementById('checkAparId').value; if (!id) return alert("Error: ID APAR tidak terbaca."); let allChecked = true; const checks = document.querySelectorAll('input[name="checkItem"]'); checks.forEach(cb => { if (!cb.checked) allChecked = false; }); const tj = !checks[4].checked; const ib = !checks[7].checked; let anp = ""; if (tj || ib) { anp = "[HARUS DIISI ULANG] "; } let img = ""; if (!allChecked) { const fi = document.getElementById('evidencePhoto'); if (fi.files.length === 0) { alert("WAJIB Upload Foto Bukti!"); return; } this.toggleLoading(true, "Mengompres Foto..."); img = await this.compressImage(fi.files[0]); this.toggleLoading(false); anp += "[FOTO TERLAMPIR] "; } const un = document.getElementById('inputNotes').value.trim(); let fn = anp + (un || (allChecked ? 'Lengkap & Berfungsi' : 'Ada kerusakan')); const cd = { action: "addCheck", aparId: id, year: new Date(document.getElementById('inputCheckDate').value).getFullYear(), month: new Date(document.getElementById('inputCheckDate').value).getMonth(), timestamp: new Date(document.getElementById('inputCheckDate').value).toISOString(), isGood: allChecked, notes: fn, petugas: document.getElementById('inputPetugas').value.trim(), imageData: img }; const s = await this.sendData(cd); if(s) { this.showDetail(id); if(allChecked) { this.showToast("Terima kasih!", "green"); } else { this.showToast("Tersimpan!", "red"); } } },
             
-            // Re-added helper methods
             editHistory: function(id, ts) { const c = this.data.checks.find(x => String(x.aparId) == String(id) && x.timestamp == ts); if(c) { this.data.historyToEdit = c; document.getElementById('editHistoryStatus').value = c.isGood; document.getElementById('editHistoryNote').value = c.notes; document.getElementById('editHistoryModal').classList.remove('hidden'); } },
             saveEditedHistory: async function() { if(!this.data.historyToEdit) return; const p = { action: "editCheck", aparId: this.data.historyToEdit.aparId, timestamp: this.data.historyToEdit.timestamp, isGood: document.getElementById('editHistoryStatus').value, notes: document.getElementById('editHistoryNote').value }; await this.sendData(p); document.getElementById('editHistoryModal').classList.add('hidden'); this.showDetail(this.data.historyToEdit.aparId); },
             showTindakLanjutModal: function() { document.getElementById('tindakLanjutModal').classList.remove('hidden'); },
