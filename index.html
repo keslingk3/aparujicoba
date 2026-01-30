@@ -32,6 +32,9 @@
         .capturing .no-print { display: none !important; }
         .capturing { border-radius: 0 !important; border: 1px solid #ddd; }
         
+        /* PUBLIC MODE: HIDE ADMIN ELEMENTS */
+        body.public-mode .admin-only { display: none !important; }
+        
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.95); z-index: 9999;
@@ -65,22 +68,48 @@
         <p class="text-sm text-gray-500" id="loadingText">Mohon tunggu sebentar ya</p>
     </div>
 
-    <div id="login-screen" class="fixed inset-0 bg-red-900 z-[100] flex items-center justify-center p-4">
+    <div id="login-screen" class="hidden fixed inset-0 bg-red-900 z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
             <div class="text-center mb-8">
                 <div class="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                     <i class="fa-solid fa-fire-extinguisher text-5xl text-red-600"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">APAR MONITOR</h1>
-                <p class="text-xs text-red-500 font-bold uppercase tracking-widest mt-1">Instalasi K3KL RSJMM</p>
+                <h1 class="text-2xl font-bold text-gray-800">LOGIN PETUGAS</h1>
+                <p class="text-xs text-red-500 font-bold uppercase tracking-widest mt-1">Sistem Monitoring APAR</p>
             </div>
             <form onsubmit="app.handleLogin(event)">
                 <div class="mb-4"><label class="block text-gray-600 text-xs font-bold mb-2 uppercase">Username</label><input type="text" id="loginUser" class="w-full border p-3 rounded-lg" placeholder="Username" required></div>
                 <div class="mb-8"><label class="block text-gray-600 text-xs font-bold mb-2 uppercase">Password</label><input type="password" id="loginPass" class="w-full border p-3 rounded-lg" placeholder="Password" required></div>
                 <button type="submit" class="w-full bg-red-700 text-white font-bold py-3.5 rounded-lg hover:bg-red-800 transition shadow-lg">MASUK APLIKASI</button>
+                <button type="button" onclick="app.cancelLogin()" class="w-full mt-3 text-gray-500 text-sm font-bold hover:text-gray-700">Batal / Kembali</button>
             </form>
-            <p class="text-center text-[10px] text-gray-400 mt-8 border-t pt-4">© 2025 Sistem Monitoring APAR Ver 2.8</p>
+        </div>
+    </div>
+
+    <div id="scan-choice-screen" class="hidden fixed inset-0 bg-gray-100 z-[90] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full fade-in text-center">
+            <div class="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <i class="fa-solid fa-qrcode text-4xl text-red-600"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">APAR Terdeteksi!</h2>
+            <p class="text-sm text-gray-500 mb-8" id="scanChoiceKode">Silakan pilih opsi di bawah ini:</p>
+            
+            <button onclick="app.handleScanOption('inspect')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg mb-4 flex items-center justify-center gap-3 transition transform hover:scale-105">
+                <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                <div class="text-left">
+                    <div class="text-sm uppercase tracking-wide">Petugas K3</div>
+                    <div class="text-lg">INSPEKSI APAR</div>
+                </div>
+            </button>
+
+            <button onclick="app.handleScanOption('history')" class="w-full bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-3 transition">
+                <i class="fa-solid fa-clock-rotate-left text-2xl text-blue-500"></i>
+                <div class="text-left">
+                    <div class="text-sm uppercase tracking-wide text-gray-400">Umum / Publik</div>
+                    <div class="text-lg">LIHAT RIWAYAT</div>
+                </div>
+            </button>
         </div>
     </div>
 
@@ -95,7 +124,7 @@
                     </div>
                 </div>
                 
-                <div class="relative flex items-center gap-3">
+                <div class="relative flex items-center gap-3 admin-only">
                     <div id="clockDisplay" class="hidden md:block text-sm font-mono font-bold bg-red-800 px-3 py-1 rounded text-red-100 border border-red-600 shadow-inner">
                         --:--:--
                     </div>
@@ -164,10 +193,10 @@
                         </div>
                     </div>
                     <div class="flex gap-2 w-full xl:w-auto justify-end flex-wrap items-center">
-                        <button onclick="app.navigate('add-apar')" class="bg-blue-600 text-white px-3 py-2 rounded shadow hover:bg-blue-700 transition text-xs flex items-center font-bold"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>
-                        <button onclick="app.printAllLabels()" class="bg-purple-600 text-white px-3 py-2 rounded shadow hover:bg-purple-700 transition text-xs flex items-center font-bold"><i class="fa-solid fa-qrcode mr-1"></i> Cetak QR</button>
-                        <button onclick="app.exportToExcel()" class="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-xs flex items-center"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
-                        <button onclick="app.resetDatabase()" class="bg-red-600 text-white px-3 py-2 rounded shadow hover:bg-red-700 transition text-xs flex items-center border border-red-800" title="Hapus Semua Data"><i class="fa-solid fa-trash-can mr-1"></i> Reset Data</button>
+                        <button onclick="app.navigate('add-apar')" class="bg-blue-600 text-white px-3 py-2 rounded shadow hover:bg-blue-700 transition text-xs flex items-center font-bold admin-only"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>
+                        <button onclick="app.printAllLabels()" class="bg-purple-600 text-white px-3 py-2 rounded shadow hover:bg-purple-700 transition text-xs flex items-center font-bold admin-only"><i class="fa-solid fa-qrcode mr-1"></i> Cetak QR</button>
+                        <button onclick="app.exportToExcel()" class="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-xs flex items-center admin-only"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+                        <button onclick="app.resetDatabase()" class="bg-red-600 text-white px-3 py-2 rounded shadow hover:bg-red-700 transition text-xs flex items-center border border-red-800 admin-only" title="Hapus Semua Data"><i class="fa-solid fa-trash-can mr-1"></i> Reset Data</button>
                     </div>
                 </div>
 
@@ -182,7 +211,7 @@
                                     <th class="py-3 px-4 text-center">Tgl Isi</th>
                                     <th class="py-3 px-4 text-center">Tgl Exp</th>
                                     <th class="py-3 px-4 text-center">Status Ceklis</th>
-                                    <th class="py-3 px-4 text-center">Aksi</th>
+                                    <th class="py-3 px-4 text-center admin-only">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="aparTableBody" class="text-gray-600 text-sm font-light"></tbody>
@@ -222,7 +251,8 @@
             </div>
 
             <div id="view-detail" class="view-section hidden fade-in">
-                <button onclick="app.navigate('dashboard')" class="mb-4 text-red-600 hover:text-red-800 font-semibold no-print flex items-center text-sm"><i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard</button>
+                <button onclick="app.navigate('dashboard')" class="admin-only mb-4 text-red-600 hover:text-red-800 font-semibold no-print flex items-center text-sm"><i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard</button>
+                
                 <div class="max-w-lg mx-auto">
                     <div id="captureArea" class="bg-white p-6 rounded-xl shadow-md border-t-4 border-red-500 print-area relative bg-white">
                         <div id="scanStatusBanner" class="hidden mb-4 p-4 rounded-lg text-center shadow-inner">
@@ -233,7 +263,7 @@
                         
                         <div class="relative">
                             <h3 id="detailKode" class="text-2xl font-bold text-center text-gray-800 mb-1"></h3>
-                            <div class="absolute top-0 right-0 flex flex-col gap-1 no-print">
+                            <div class="admin-only absolute top-0 right-0 flex flex-col gap-1 no-print">
                                 <button onclick="app.editCurrentApar()" class="text-blue-500 hover:text-blue-700 text-xs font-bold border border-blue-200 p-1 rounded bg-blue-50"><i class="fa-solid fa-pen"></i> Edit</button>
                                 <button onclick="app.openMoveModal()" class="text-orange-500 hover:text-orange-700 text-xs font-bold border border-orange-200 p-1 rounded bg-orange-50"><i class="fa-solid fa-truck-fast"></i> Pindah</button>
                             </div>
@@ -266,15 +296,15 @@
                         <div class="mt-4 text-center text-[10px] text-gray-400 hidden show-on-capture">Sistem Monitoring APAR RSJMM Bogor</div>
                     </div>
                     
-                    <div id="tindakLanjutContainer" class="hidden mt-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-sm no-print">
+                    <div id="tindakLanjutContainer" class="hidden admin-only mt-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-sm no-print">
                         <p class="font-bold">Perlu Tindak Lanjut!</p>
                         <p class="text-sm">Status APAR ini Rusak. Segera lakukan perbaikan/penggantian.</p>
                         <button onclick="app.showTindakLanjutModal()" class="mt-2 bg-yellow-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-yellow-700">Input Tindak Lanjut</button>
                     </div>
 
                     <div class="mt-8 no-print space-y-3">
-                        <button onclick="app.shareStatus('print')" class="w-full bg-gray-800 text-white py-3 rounded-lg font-bold shadow hover:bg-gray-900 transition flex justify-center items-center"><i class="fa-solid fa-print mr-2"></i> Cetak Status Terkini</button>
-                        <button id="btnChecklistNow" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow hover:bg-blue-700 transition"><i class="fa-solid fa-clipboard-check mr-2"></i> Input Ceklis Baru</button>
+                        <button onclick="app.shareStatus('print')" class="admin-only w-full bg-gray-800 text-white py-3 rounded-lg font-bold shadow hover:bg-gray-900 transition flex justify-center items-center"><i class="fa-solid fa-print mr-2"></i> Cetak Status Terkini</button>
+                        <button id="btnChecklistNow" class="admin-only w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow hover:bg-blue-700 transition"><i class="fa-solid fa-clipboard-check mr-2"></i> Input Ceklis Baru</button>
                     </div>
                 </div>
             </div>
@@ -284,13 +314,10 @@
                     <div class="md:col-span-2 max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl border-t-4 border-blue-600 w-full">
                         <div class="mb-6 text-center"><h2 class="text-2xl font-bold text-gray-800">Form Ceklis Bulanan</h2></div>
                         
-                        <div id="gpsStatus" class="mb-4 text-center text-xs font-bold text-gray-500">
-                            <i class="fa-solid fa-location-crosshairs animate-pulse"></i> Mencari Lokasi GPS...
-                        </div>
-
                         <form onsubmit="app.submitChecklist(event)">
                             <input type="hidden" id="checkAparId">
-                            <input type="hidden" id="gpsCoords"> <div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2">Nama Petugas Inspeksi</label><input type="text" id="inputPetugas" required class="w-full border rounded px-3 py-2 bg-gray-50 focus:outline-blue-500 font-semibold" placeholder="Masukkan nama Anda..."></div>
+                            
+                            <div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2">Nama Petugas Inspeksi</label><input type="text" id="inputPetugas" required class="w-full border rounded px-3 py-2 bg-gray-50 focus:outline-blue-500 font-semibold" placeholder="Masukkan nama Anda..."></div>
                             <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200"><label class="block text-gray-700 text-sm font-bold mb-2">Tanggal Pengecekan</label><input type="date" id="inputCheckDate" required class="w-full border border-blue-300 rounded px-3 py-2 focus:outline-blue-500 font-bold text-gray-700"></div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 <div class="space-y-3">
@@ -322,7 +349,7 @@
             </div>
         </main>
 
-        <footer class="bg-gray-200 text-center py-4 mt-auto border-t border-gray-300 no-print">
+        <footer class="bg-gray-200 text-center py-4 mt-auto border-t border-gray-300 no-print admin-only">
             <p class="text-sm text-gray-600 font-medium">Copyright by <span class="text-red-700 font-bold">@K3KL RSJMM</span> 2025</p>
         </footer>
     </div>
@@ -407,7 +434,8 @@
                 months: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"],
                 fullMonths: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
                 currentPage: 1, itemsPerPage: 10,
-                currentDetailId: null, historyToEdit: null
+                currentDetailId: null, historyToEdit: null,
+                pendingScanAction: null, pendingScanId: null // New vars for flow control
             },
             
             // --- AUTH & INIT (UPDATED) ---
@@ -416,11 +444,9 @@
                 const u = document.getElementById('loginUser').value; 
                 const p = document.getElementById('loginPass').value;
                 
-                // Tampilkan Loading
                 this.toggleLoading(true, "Memeriksa Database...");
                 
                 try {
-                    // Panggil API Google Script untuk Login
                     const response = await fetch(API_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -433,46 +459,83 @@
                     const result = await response.json();
                     
                     if (result.status === 'success') {
-                        // Simpan Session
                         localStorage.setItem('isLoggedIn', 'true');
                         localStorage.setItem('userRole', result.role);
                         localStorage.setItem('petugasName', result.petugasName);
+                        if(result.petugasName) document.getElementById('inputPetugas').value = result.petugasName;
                         
-                        // Isi otomatis nama petugas di form checklist
-                        if(result.petugasName) {
-                            document.getElementById('inputPetugas').value = result.petugasName;
+                        document.getElementById('login-screen').classList.add('hidden');
+                        
+                        // Check if there was a pending scan action
+                        if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) {
+                            this.data.pendingScanAction = null;
+                            this.showChecklistForm(this.data.pendingScanId);
+                            document.getElementById('main-app').classList.remove('hidden');
+                        } else {
+                            this.init(); // Normal dashboard load
                         }
-                        
-                        this.init();
                     } else {
                         alert(result.message || 'Login Gagal!');
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Gagal terhubung ke server. Cek internet Anda.');
+                    alert('Gagal terhubung ke server.');
                 } finally {
                     this.toggleLoading(false);
                 }
             },
 
-            handleLogout: function() { if(confirm("Yakin ingin keluar?")) { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userRole'); localStorage.removeItem('petugasName'); location.reload(); } },
+            cancelLogin: function() {
+                document.getElementById('login-screen').classList.add('hidden');
+                const scanId = new URLSearchParams(window.location.search).get('id');
+                if (scanId) {
+                    document.getElementById('scan-choice-screen').classList.remove('hidden');
+                } else {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                }
+            },
+
+            handleLogout: function() { 
+                if(confirm("Yakin ingin keluar?")) { 
+                    localStorage.removeItem('isLoggedIn'); 
+                    localStorage.removeItem('userRole'); 
+                    localStorage.removeItem('petugasName'); 
+                    location.reload(); 
+                } 
+            },
             
             init: async function() {
-                if (!localStorage.getItem('isLoggedIn')) { document.getElementById('login-screen').classList.remove('hidden'); return; }
-                document.getElementById('login-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden');
+                const urlParams = new URLSearchParams(window.location.search);
+                const scanId = urlParams.get('id');
+
+                // Jika ada ID di URL (Scan QR), Tampilkan Pilihan Dulu (JANGAN Login Dulu)
+                if (scanId) {
+                    document.getElementById('scan-choice-screen').classList.remove('hidden');
+                    // Background fetch data while waiting for user choice
+                    this.fetchDataWithTimeout().then(() => {
+                        // Optional: Pre-fill QR info if needed
+                    });
+                    return;
+                }
+
+                // Jika buka root URL, paksa login seperti biasa
+                if (!localStorage.getItem('isLoggedIn')) { 
+                    document.getElementById('login-screen').classList.remove('hidden'); 
+                    return; 
+                }
                 
-                // FITUR BARU: JAM REALTIME
+                document.getElementById('login-screen').classList.add('hidden'); 
+                document.getElementById('main-app').classList.remove('hidden');
+                
                 setInterval(() => {
                     const now = new Date();
                     document.getElementById('clockDisplay').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
                 }, 1000);
                 
-                // FEATURE: OFFLINE SYNC BUTTON CHECK
                 this.updateSyncButton();
                 window.addEventListener('online', () => this.updateSyncButton());
                 window.addEventListener('offline', () => this.updateSyncButton());
 
-                // Set nama petugas otomatis jika ada
                 const savedPetugas = localStorage.getItem('petugasName');
                 if(savedPetugas) document.getElementById('inputPetugas').value = savedPetugas;
 
@@ -480,7 +543,33 @@
                 const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
                 if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); this.renderDashboard(); } catch(e) {} }
                 this.fetchDataWithTimeout();
-                const urlParams = new URLSearchParams(window.location.search); const scanId = urlParams.get('id'); if (scanId) { this.showDetail(scanId); } 
+            },
+
+            // --- NEW: SCAN FLOW LOGIC ---
+            handleScanOption: function(choice) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const scanId = urlParams.get('id');
+                
+                document.getElementById('scan-choice-screen').classList.add('hidden');
+                
+                if (choice === 'inspect') {
+                    // Logic Inspeksi: Butuh Login
+                    if (localStorage.getItem('isLoggedIn')) {
+                        // Sudah login sebelumnya, langsung gass ke form
+                        document.getElementById('main-app').classList.remove('hidden');
+                        this.showChecklistForm(scanId);
+                    } else {
+                        // Belum login, minta login dulu
+                        this.data.pendingScanAction = 'inspect';
+                        this.data.pendingScanId = scanId;
+                        document.getElementById('login-screen').classList.remove('hidden');
+                    }
+                } else if (choice === 'history') {
+                    // Logic Riwayat: Mode Publik (Tanpa Login)
+                    document.body.classList.add('public-mode'); // CSS Class untuk sembunyikan tombol
+                    document.getElementById('main-app').classList.remove('hidden');
+                    this.showDetail(scanId);
+                }
             },
 
             // --- DATA SYNC ---
@@ -507,12 +596,11 @@
             
             // FEATURE: OFFLINE QUEUE LOGIC
             sendData: async function(payload) {
-                // Cek Koneksi Internet
                 if (!navigator.onLine) {
                     this.saveToOfflineQueue(payload);
                     this.showToast("Tidak ada sinyal. Disimpan di Offline Queue.", "orange");
                     this.updateSyncButton();
-                    return true; // Return true agar UI menganggap sukses sementara
+                    return true; 
                 }
 
                 this.toggleLoading(true, "Menyimpan...");
@@ -526,7 +614,6 @@
                         return true;
                     } else { throw new Error(json.message); }
                 } catch (err) {
-                    // Jika gagal fetch (misal putus di tengah jalan), simpan ke offline
                     this.toggleLoading(false);
                     this.saveToOfflineQueue(payload);
                     this.showToast("Gagal kirim. Masuk antrean offline.", "orange");
@@ -561,10 +648,7 @@
 
                 this.toggleLoading(true, "Sinkronisasi Data Offline...");
                 let successCount = 0;
-                
-                // Copy queue untuk diproses
                 const newQueue = [];
-                
                 for (let i = 0; i < queue.length; i++) {
                     try {
                         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(queue[i]) });
@@ -572,13 +656,12 @@
                         if(json.status === 'success') {
                             successCount++;
                         } else {
-                            newQueue.push(queue[i]); // Simpan balik jika gagal server
+                            newQueue.push(queue[i]); 
                         }
                     } catch (e) {
-                        newQueue.push(queue[i]); // Simpan balik jika error koneksi
+                        newQueue.push(queue[i]); 
                     }
                 }
-                
                 localStorage.setItem('offlineQueue', JSON.stringify(newQueue));
                 await this.fetchDataWithTimeout();
                 this.updateSyncButton();
@@ -586,15 +669,12 @@
                 alert(`${successCount} Data berhasil dikirim. Sisa: ${newQueue.length}`);
             },
 
-            // --- RESET DATA FEATURE ---
             resetDatabase: async function() {
-                // Hanya Admin yang bisa reset
                 if(localStorage.getItem('userRole') !== 'Admin') {
                     alert('Hanya ADMIN yang bisa mereset data!');
                     return;
                 }
                 const pass = prompt("PERINGATAN! Anda akan menghapus SELURUH data APAR dan Riwayat.\n\nMasukkan Password ADMIN untuk melanjutkan:");
-                // Validasi password hardcoded di sini sebagai lapis kedua, atau bisa via server
                 if (pass === "admin123") { 
                     if(confirm("Apakah Anda YAKIN? Data yang dihapus tidak dapat dikembalikan.")) {
                         const success = await this.sendData({ action: "resetDatabase" });
@@ -611,7 +691,7 @@
                 }
             },
 
-            // --- DASHBOARD LOGIC (FIXED FILTER & AUTO EXPIRATION) ---
+            // --- DASHBOARD LOGIC ---
             changePage: function(delta) {
                 this.data.currentPage += delta;
                 this.renderDashboard();
@@ -622,14 +702,12 @@
                 
                 let fApars = this.data.apars.filter(a => {
                     let lastCheck;
-                    // FIX: Gunakan String() agar tipe data (angka vs teks) cocok
                     if(sMonth !== "") {
                         lastCheck = this.data.checks.find(c => c.aparId == a.id && String(c.year) === String(sYear) && String(c.month) === String(sMonth));
                     } else {
                         lastCheck = this.getLastCheck(a.id);
                     }
 
-                    // FEATURE: AUTO EXPIRATION CHECK
                     const isExpired = new Date(a.expiredDate) < new Date();
                     let statusText = "belum dicek"; 
                     if (isExpired) {
@@ -652,25 +730,20 @@
                     const j = (apar.jenis || '').toLowerCase();
                     if(j.includes('powder')) cPow++; else if(j.includes('co2')) cCo2++; else if(j.includes('foam')) cFoam++; else cClean++;
 
-                    // FIX: Statistik menyesuaikan dengan filter bulan yang dipilih
                     let targetCheck;
                     if(sMonth !== "") {
                         targetCheck = this.data.checks.find(c => c.aparId == apar.id && String(c.year) === String(sYear) && String(c.month) === String(sMonth));
-                        if(targetCheck) sChecked++; // Hanya hitung ceklis jika ada di bulan tersebut
+                        if(targetCheck) sChecked++; 
                     } else {
-                        // Jika filter bulan kosong, cek apakah sudah dicek BULAN INI (Realtime)
                         const currentMonthCheck = this.data.checks.find(c => c.aparId == apar.id && c.year == new Date().getFullYear() && c.month == new Date().getMonth());
                         if(currentMonthCheck) sChecked++;
                         targetCheck = this.getLastCheck(apar.id);
                     }
                     
-                    // Logic Statistik dengan Expired
                     if (new Date(apar.expiredDate) < new Date()) {
-                        sBad++; // Expired otomatis Bad
+                        sBad++; 
                     } else if(targetCheck) { 
                         String(targetCheck.isGood)==='true' ? sGood++ : sBad++; 
-                    } else {
-                        // Belum cek, belum expired, tidak masuk bad/good
                     }
                 });
 
@@ -702,11 +775,9 @@
 
                 paginatedItems.forEach(apar => {
                     let lastCheck;
-                    // FIX: Pencarian status di baris tabel menyesuaikan filter
                     if (sMonth !== "") lastCheck = this.data.checks.find(c => c.aparId == apar.id && String(c.year) === String(sYear) && String(c.month) === String(sMonth));
                     else lastCheck = this.getLastCheck(apar.id);
 
-                    // AUTO EXPIRATION BADGE
                     const isExp = new Date(apar.expiredDate) < new Date(); 
                     
                     let badge = '<span class="bg-gray-100 text-gray-400 py-1 px-2 rounded text-xs">Belum Dicek</span>';
@@ -745,7 +816,7 @@
                         <td class="py-3 px-4 text-center text-xs text-gray-500">${refillD}</td>
                         <td class="py-3 px-4 text-center text-xs">${expD}</td>
                         <td class="py-3 px-4 text-center">${badge}</td>
-                        <td class="py-3 px-4 text-center flex justify-center space-x-2">
+                        <td class="py-3 px-4 text-center flex justify-center space-x-2 admin-only">
                             <button onclick="app.showChecklistForm('${apar.id}')" class="w-8 h-8 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-sm" title="Ceklis"><i class="fa-solid fa-check text-xs"></i></button>
                             <button onclick="app.showDetail('${apar.id}')" class="w-8 h-8 rounded bg-gray-50 text-gray-600 hover:bg-gray-600 hover:text-white transition shadow-sm" title="Detail"><i class="fa-solid fa-eye text-xs"></i></button>
                             <button onclick="app.printLabel('${apar.id}')" class="w-8 h-8 rounded bg-gray-800 text-white hover:bg-black transition shadow-sm" title="QR Code"><i class="fa-solid fa-qrcode text-xs"></i></button>
@@ -755,11 +826,9 @@
                 });
             },
             
-            // FITUR BARU: Render Riwayat Dashboard
             renderDashboardMovements: function() {
                 const container = document.getElementById('dashboardMovements');
                 container.innerHTML = '';
-                // Ambil 5 perpindahan terakhir dari seluruh data
                 const allMoves = [...this.data.movements].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
                 
                 if(allMoves.length === 0) {
@@ -768,10 +837,8 @@
                 }
 
                 allMoves.forEach(m => {
-                    // Cari Kode APAR
                     const apar = this.data.apars.find(a => a.id == m.aparId);
                     const kode = apar ? apar.kode : 'APAR Terhapus';
-                    
                     container.innerHTML += `
                     <div class="flex items-center gap-3 text-xs border-b border-gray-100 pb-2 p-1 hover:bg-orange-50 rounded">
                         <div class="bg-orange-100 text-orange-600 p-1.5 rounded-full"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
@@ -790,7 +857,7 @@
                 });
             },
 
-            // --- NOTIFIKASI TOGGLE ---
+            // --- UTILS & NOTIFS ---
             toggleNotifications: function(event) {
                 event.stopPropagation();
                 const d = document.getElementById('notifDropdown');
@@ -803,8 +870,6 @@
                     dropdown.classList.add('hidden');
                 }
             },
-
-            // --- NOTIFIKASI SENSITIF ---
             checkNotifications: function() {
                 const notifBadge = document.getElementById('notifBadge');
                 const notifList = document.getElementById('notifList');
@@ -817,7 +882,6 @@
                 this.data.apars.forEach(apar => {
                     const expDate = new Date(apar.expiredDate);
                     const daysToEx = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-                    
                     if (daysToEx < 0 && !this.isDismissed('exp', apar.id)) {
                         count++;
                         this.addNotifItem(notifList, 'bg-red-50 border-red-200', 'text-red-700', 'KADALUARSA', `APAR ${apar.kode} sudah lewat tanggal kadaluarsa!`, apar.id, 'exp');
@@ -825,385 +889,25 @@
                         count++;
                         this.addNotifItem(notifList, 'bg-yellow-50 border-yellow-200', 'text-yellow-700', 'AKAN KADALUARSA', `APAR ${apar.kode} expired dalam ${daysToEx} hari.`, apar.id, 'expwarn');
                     }
-
                     const lastCheck = this.getLastCheck(apar.id);
                     if (lastCheck && String(lastCheck.isGood) === 'false' && !this.isDismissed('dmg', apar.id)) {
                         count++;
                         this.addNotifItem(notifList, 'bg-orange-50 border-orange-200', 'text-orange-700', 'KONDISI RUSAK', `APAR ${apar.kode} dilaporkan RUSAK. Butuh perbaikan.`, apar.id, 'dmg');
                     }
-
                     const checkedThisMonth = this.data.checks.some(c => c.aparId == apar.id && c.month == curMonth && c.year == curYear);
                     if (!checkedThisMonth && today.getDate() > 20 && !this.isDismissed('uncheck', apar.id)) { 
                         count++;
                         this.addNotifItem(notifList, 'bg-blue-50 border-blue-200', 'text-blue-700', 'BELUM DICEK', `APAR ${apar.kode} belum dicek bulan ini.`, apar.id, 'uncheck');
                     }
                 });
-
                 if (count > 0) { notifBadge.classList.remove('hidden'); notifBadge.innerText = count; } 
                 else { notifBadge.classList.add('hidden'); notifList.innerHTML = '<div class="p-8 text-center text-sm text-gray-400 italic">Semua Aman! Tidak ada notifikasi.</div>'; }
             },
             addNotifItem: function(container, bgClass, textClass, title, msg, id, type) {
-                container.innerHTML += `
-                    <div class="px-4 py-3 border-b ${bgClass} flex justify-between items-start">
-                        <div>
-                            <div class="text-[10px] font-bold ${textClass} uppercase mb-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>${title}</div>
-                            <div class="text-xs font-semibold text-gray-700">${msg}</div>
-                        </div>
-                        <button onclick="app.dismissNotif('${type}', '${id}')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
-                    </div>`;
+                container.innerHTML += `<div class="px-4 py-3 border-b ${bgClass} flex justify-between items-start"><div><div class="text-[10px] font-bold ${textClass} uppercase mb-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>${title}</div><div class="text-xs font-semibold text-gray-700">${msg}</div></div><button onclick="app.dismissNotif('${type}', '${id}')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>`;
             },
             dismissNotif: function(type, id) { this.data.dismissed.push(type + '_' + id); localStorage.setItem('dismissed', JSON.stringify(this.data.dismissed)); this.checkNotifications(); },
             isDismissed: function(type, id) { return this.data.dismissed.includes(type + '_' + id); },
-
-            // --- CRUD APAR ---
-            saveApar: async function(e) { 
-                e.preventDefault(); 
-                const editId = document.getElementById('editAparId').value;
-                const payload = {
-                    action: editId ? "editApar" : "addApar",
-                    id: editId || Date.now().toString(),
-                    kode: document.getElementById('inputKode').value, 
-                    lokasi: document.getElementById('inputLokasi').value, 
-                    jenis: document.getElementById('inputJenis').value, 
-                    berat: document.getElementById('inputBerat').value.replace(',', '.'), 
-                    refillDate: document.getElementById('inputRefill').value,
-                    expiredDate: document.getElementById('inputExpired').value, 
-                    createdAt: new Date() 
-                };
-                const success = await this.sendData(payload); 
-                if(success) { e.target.reset(); this.showDetail(payload.id); } 
-            },
-            editCurrentApar: function() {
-                const id = this.data.currentDetailId;
-                const apar = this.data.apars.find(a => a.id == id);
-                if(!apar) return;
-                document.getElementById('editAparId').value = apar.id;
-                document.getElementById('inputKode').value = apar.kode;
-                document.getElementById('inputLokasi').value = apar.lokasi;
-                document.getElementById('inputJenis').value = apar.jenis;
-                document.getElementById('inputBerat').value = apar.berat;
-                document.getElementById('inputRefill').value = apar.refillDate ? new Date(apar.refillDate).toISOString().split('T')[0] : '';
-                document.getElementById('inputExpired').value = new Date(apar.expiredDate).toISOString().split('T')[0];
-                document.getElementById('formTitle').innerText = "Edit Data APAR";
-                document.getElementById('btnSaveApar').innerText = "Update Perubahan";
-                this.navigate('add-apar');
-            },
-            deleteApar: async function(id) { if(confirm('Hapus APAR ini permanen?')) { await this.sendData({ action: "deleteApar", id: id }); this.renderDashboard(); } },
-
-            // --- FITUR: MOVE APAR ---
-            openMoveModal: function() {
-                const id = this.data.currentDetailId;
-                const apar = this.data.apars.find(a => a.id == id);
-                if(!apar) return;
-                document.getElementById('moveCurrentLoc').innerText = apar.lokasi;
-                document.getElementById('moveNewLoc').value = "";
-                document.getElementById('movePetugas').value = localStorage.getItem('petugasName') || ""; // Auto-fill petugas
-                document.getElementById('moveAparModal').classList.remove('hidden');
-            },
-            submitMove: async function() {
-                const id = this.data.currentDetailId;
-                const apar = this.data.apars.find(a => a.id == id);
-                const newLoc = document.getElementById('moveNewLoc').value.trim();
-                const user = document.getElementById('movePetugas').value.trim();
-                if(!newLoc) return alert("Lokasi baru harus diisi!");
-                
-                const payload = {
-                    action: "moveApar",
-                    id: id,
-                    oldLokasi: apar.lokasi,
-                    newLokasi: newLoc,
-                    petugas: user,
-                    timestamp: new Date()
-                };
-                
-                await this.sendData(payload);
-                document.getElementById('moveAparModal').classList.add('hidden');
-                this.showDetail(id); // Reload detail
-            },
-            renderMovementHistory: function(id) {
-                const container = document.getElementById('movementHistoryBody');
-                container.innerHTML = '';
-                const history = this.data.movements.filter(m => m.aparId == id).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
-                if(history.length === 0) {
-                    container.innerHTML = '<div class="text-xs text-gray-400 italic text-center">Belum ada riwayat perpindahan.</div>';
-                    return;
-                }
-                
-                history.forEach(m => {
-                    container.innerHTML += `
-                    <div class="flex items-start gap-2 text-xs border-b border-gray-100 pb-2">
-                        <i class="fa-solid fa-arrow-right text-orange-500 mt-0.5"></i>
-                        <div>
-                            <div class="font-bold text-gray-700">${new Date(m.timestamp).toLocaleDateString('id-ID')} - ${new Date(m.timestamp).toLocaleTimeString('id-ID')}</div>
-                            <div class="text-gray-600">Dari: <span class="font-semibold line-through text-red-400">${m.oldLocation}</span></div>
-                            <div class="text-gray-600">Ke: <span class="font-semibold text-green-600">${m.newLocation}</span></div>
-                            <div class="text-gray-400 text-[10px] mt-0.5">Oleh: ${m.petugas || '-'}</div>
-                        </div>
-                    </div>`;
-                });
-            },
-
-            // --- CHECKLIST & HISTORY (UPDATED FOR REFILL STATUS & EXPIRATION) ---
-            showDetail: function(id) {
-                this.data.currentDetailId = id;
-                const apar = this.data.apars.find(a => a.id == id); if (!apar) return alert('Data hilang.');
-                this.navigate('detail'); 
-                document.getElementById('detailKode').innerText = apar.kode; 
-                document.getElementById('detailLokasi').innerText = apar.lokasi; 
-                document.getElementById('detailJenis').innerText = apar.jenis; 
-                document.getElementById('detailBerat').innerText = apar.berat + ' kg'; 
-                document.getElementById('detailRefill').innerText = apar.refillDate ? new Date(apar.refillDate).toLocaleDateString('id-ID') : '-';
-                document.getElementById('detailExpired').innerText = new Date(apar.expiredDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                document.getElementById('btnChecklistNow').onclick = () => this.showChecklistForm(id);
-                
-                const lastCheck = this.getLastCheck(id);
-                const statusBanner = document.getElementById('scanStatusBanner');
-                const tlContainer = document.getElementById('tindakLanjutContainer');
-                const isExp = new Date(apar.expiredDate) < new Date(); // Cek Expired
-                
-                this.renderMiniHistory(id, 'detailHistoryBody');
-                this.renderMovementHistory(id); 
-                statusBanner.classList.remove('hidden');
-                
-                if (isExp) {
-                    // PRIORITAS UTAMA: EXPIRED
-                    statusBanner.className = "mb-4 p-4 rounded-lg text-center bg-red-800 border border-red-900 animate-pulse text-white"; 
-                    document.getElementById('scanStatusText').className = "text-2xl font-black"; 
-                    document.getElementById('scanStatusText').innerHTML = 'APAR KADALUARSA (EXPIRED) <i class="fa-solid fa-calendar-xmark"></i>';
-                    document.getElementById('scanStatusDate').innerText = "Segera lakukan penggantian unit.";
-                    tlContainer.classList.remove('hidden');
-                } else if (lastCheck) {
-                    const isG = String(lastCheck.isGood).toLowerCase() === 'true';
-                    if (isG) { 
-                        statusBanner.className = "mb-4 p-4 rounded-lg text-center bg-green-100 border border-green-300"; 
-                        document.getElementById('scanStatusText').className = "text-2xl font-black text-green-700"; 
-                        document.getElementById('scanStatusText').innerHTML = 'KONDISI BAIK <i class="fa-solid fa-circle-check"></i>';
-                        tlContainer.classList.add('hidden');
-                    } else { 
-                        if (lastCheck.notes && lastCheck.notes.includes('HARUS DIISI ULANG')) {
-                            statusBanner.className = "mb-4 p-4 rounded-lg text-center bg-purple-100 border border-purple-300 animate-pulse"; 
-                            document.getElementById('scanStatusText').className = "text-2xl font-black text-purple-700"; 
-                            document.getElementById('scanStatusText').innerHTML = 'APAR HARUS DIISI ULANG <i class="fa-solid fa-fill-drip"></i>';
-                        } else {
-                            statusBanner.className = "mb-4 p-4 rounded-lg text-center bg-red-100 border border-red-300 animate-pulse"; 
-                            document.getElementById('scanStatusText').className = "text-2xl font-black text-red-700"; 
-                            document.getElementById('scanStatusText').innerHTML = 'KONDISI RUSAK <i class="fa-solid fa-circle-xmark"></i>';
-                        }
-                        tlContainer.classList.remove('hidden');
-                    }
-                    document.getElementById('scanStatusDate').innerText = "Cek Terakhir: " + new Date(lastCheck.timestamp).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
-                } else { 
-                    statusBanner.className = "mb-4 p-4 rounded-lg text-center bg-gray-100 border border-gray-300"; 
-                    document.getElementById('scanStatusText').innerHTML = "BELUM ADA DATA"; 
-                    tlContainer.classList.add('hidden');
-                }
-            },
-            renderMiniHistory: function(id, targetId) {
-                const container = document.getElementById(targetId); container.innerHTML = '';
-                const history = this.data.checks.filter(c => c.aparId == id).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
-                history.forEach((h, index) => {
-                    const isG = String(h.isGood).toLowerCase() === 'true';
-                    container.innerHTML += `
-                    <div class="p-3 rounded-lg border ${isG ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 relative group">
-                        <i class="fa-solid ${isG ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mt-1"></i>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-xs uppercase">${new Date(h.timestamp).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'2-digit'})}</span>
-                                <span class="text-[10px] font-bold border border-current px-1 rounded ${isG ? 'text-green-700' : 'text-red-700'}">${isG ? 'BAIK' : 'RUSAK'}</span>
-                            </div>
-                            <div class="text-xs italic text-gray-600 mt-1">"${h.notes}"</div>
-                            <div class="text-[10px] text-gray-500 font-bold mt-1"><i class="fa-solid fa-user-tag mr-1"></i> ${h.petugas || '-'}</div>
-                        </div>
-                        <button onclick="app.editHistory('${id}', '${h.timestamp}')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white border shadow-sm p-1 rounded text-blue-500 hover:text-blue-700 transition"><i class="fa-solid fa-pen text-xs"></i></button>
-                    </div>`;
-                });
-            },
-            editHistory: function(aparId, timestamp) {
-                const check = this.data.checks.find(c => c.aparId == aparId && c.timestamp == timestamp);
-                if(check) {
-                    this.data.historyToEdit = check;
-                    document.getElementById('editHistoryStatus').value = check.isGood;
-                    document.getElementById('editHistoryNote').value = check.notes;
-                    document.getElementById('editHistoryModal').classList.remove('hidden');
-                }
-            },
-            saveEditedHistory: async function() {
-                if(!this.data.historyToEdit) return;
-                const newStatus = document.getElementById('editHistoryStatus').value;
-                const newNote = document.getElementById('editHistoryNote').value;
-                const payload = {
-                    action: "editCheck",
-                    aparId: this.data.historyToEdit.aparId,
-                    timestamp: this.data.historyToEdit.timestamp, // key
-                    isGood: newStatus,
-                    notes: newNote
-                };
-                await this.sendData(payload);
-                document.getElementById('editHistoryModal').classList.add('hidden');
-                this.showDetail(this.data.historyToEdit.aparId);
-            },
-            showTindakLanjutModal: function() { document.getElementById('tindakLanjutModal').classList.remove('hidden'); },
-            submitTindakLanjut: async function() {
-                const id = this.data.currentDetailId;
-                const note = "TINDAK LANJUT: " + document.getElementById('tlNote').value;
-                const ptgs = document.getElementById('tlPetugas').value;
-                // Tindak lanjut = Input ceklis baru tapi otomatis BAIK
-                const checkData = { 
-                    action: "addCheck", aparId: id, year: new Date().getFullYear(), month: new Date().getMonth(), 
-                    timestamp: new Date().toISOString(), isGood: true, notes: note, petugas: ptgs 
-                };
-                await this.sendData(checkData);
-                document.getElementById('tindakLanjutModal').classList.add('hidden');
-                this.showDetail(id);
-            },
-            
-            // --- HELPER: IMAGE COMPRESSOR ---
-            compressImage: function(file) {
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.src = event.target.result;
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const maxWidth = 600; // Resize agar ringan
-                            const scaleSize = maxWidth / img.width;
-                            canvas.width = maxWidth;
-                            canvas.height = img.height * scaleSize;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            // Kompres kualitas 0.5 (50%)
-                            resolve(canvas.toDataURL('image/jpeg', 0.5));
-                        }
-                    }
-                });
-            },
-
-            // --- SUBMIT CHECKLIST (UPDATED: GPS & PHOTO & OFFLINE) ---
-            submitChecklist: async function(e) {
-                e.preventDefault(); 
-                const id = document.getElementById('checkAparId').value; 
-                let allChecked = true; 
-                
-                // Cek Item satu per satu
-                const checks = document.querySelectorAll('input[name="checkItem"]');
-                checks.forEach(cb => { if (!cb.checked) allChecked = false; });
-                
-                // Deteksi khusus
-                const tekananJelek = !checks[4].checked;
-                const isiBeku = !checks[7].checked;
-                let autoNotePrefix = "";
-
-                if (tekananJelek || isiBeku) {
-                    autoNotePrefix = "[HARUS DIISI ULANG] ";
-                }
-                
-                // FEATURE: WAJIB FOTO JIKA RUSAK
-                let imageBase64 = "";
-                if (!allChecked) {
-                    const fileInput = document.getElementById('evidencePhoto');
-                    if (fileInput.files.length === 0) {
-                        alert("WAJIB Upload Foto Bukti jika kondisi Rusak/Isi Ulang!");
-                        return;
-                    }
-                    this.toggleLoading(true, "Mengompres Foto...");
-                    imageBase64 = await this.compressImage(fileInput.files[0]);
-                    this.toggleLoading(false);
-                    autoNotePrefix += "[FOTO TERLAMPIR] ";
-                }
-
-                // FEATURE: VALIDASI GPS
-                const gpsString = document.getElementById('gpsCoords').value;
-                if (!gpsString && navigator.onLine) {
-                    // Jika online tapi GPS belum dapat, peringatkan
-                    if(!confirm("GPS belum terkunci presisi. Lanjutkan simpan?")) return;
-                }
-
-                const userNotes = document.getElementById('inputNotes').value.trim();
-                let finalNotes = autoNotePrefix + (userNotes || (allChecked ? 'Lengkap & Berfungsi' : 'Ada kerusakan'));
-                
-                // Append GPS to Notes (Workaround tanpa ubah kolom database)
-                if(gpsString) {
-                    finalNotes += ` (GPS: ${gpsString})`;
-                }
-                // Append Image Data to Notes (Limitasi Google Sheet, sebaiknya pendek, ini akan panjang)
-                // Strategi: Kirim imageBase64 sebagai param terpisah, biarkan backend handle atau abaikan
-                
-                const checkData = { 
-                    action: "addCheck", 
-                    aparId: id, 
-                    year: new Date(document.getElementById('inputCheckDate').value).getFullYear(), 
-                    month: new Date(document.getElementById('inputCheckDate').value).getMonth(), 
-                    timestamp: new Date(document.getElementById('inputCheckDate').value).toISOString(), 
-                    isGood: allChecked, 
-                    notes: finalNotes, 
-                    petugas: document.getElementById('inputPetugas').value.trim(),
-                    imageData: imageBase64 // Param baru, backend lama mungkin mengabaikan tapi aman
-                };
-                
-                const success = await this.sendData(checkData); 
-                if(success) { 
-                    this.showDetail(id); 
-                    if(allChecked) {
-                        this.showToast("Terima kasih sudah rawat aku 🤗", "green");
-                    } else {
-                        this.showToast("Laporan kerusakan tersimpan 📸", "red");
-                    }
-                }
-            },
-            
-            // --- EXPORT & PRINT (UPDATED) ---
-            exportToExcel: function() {
-                const sMonth = document.getElementById('monthFilter').value;
-                
-                // TABLE 1: DATA UTAMA
-                let table1 = `<h3 style="margin-bottom:5px;">DATA PEMERIKSAAN APAR</h3><table border="1"><thead><tr style="background:#ddd;"><th>Kode</th><th>Lokasi</th><th>Jenis</th><th>Tgl Isi</th><th>Exp</th><th>Status</th><th>Catatan</th></tr></thead><tbody>`;
-                this.data.apars.forEach(apar => {
-                    let lastCheck;
-                    if(sMonth !== "") lastCheck = this.data.checks.find(c => c.aparId == apar.id && c.month == sMonth);
-                    else lastCheck = this.getLastCheck(apar.id);
-                    
-                    // Logic Status Export
-                    let status = "BELUM CEK";
-                    if (new Date(apar.expiredDate) < new Date()) {
-                        status = "EXPIRED";
-                    } else if (lastCheck) {
-                        status = (String(lastCheck.isGood)==='true' ? "BAIK" : "RUSAK");
-                        if(lastCheck.notes.includes('HARUS DIISI ULANG')) status = "ISI ULANG";
-                    }
-
-                    const note = lastCheck ? lastCheck.notes : "-";
-                    const refill = apar.refillDate ? new Date(apar.refillDate).toLocaleDateString('id-ID') : "-";
-                    
-                    table1 += `<tr><td>${apar.kode}</td><td>${apar.lokasi}</td><td>${apar.jenis}</td><td>${refill}</td><td>${new Date(apar.expiredDate).toLocaleDateString('id-ID')}</td><td>${status}</td><td>${note}</td></tr>`;
-                });
-                table1 += `</tbody></table><br><br>`;
-
-                // TABLE 2: RIWAYAT PERPINDAHAN (FITUR BARU DI EXCEL)
-                let table2 = `<h3 style="margin-bottom:5px;">RIWAYAT PERPINDAHAN LOKASI</h3><table border="1"><thead><tr style="background:#ffedd5;"><th>Waktu</th><th>Kode APAR</th><th>Dari Ruangan</th><th>Ke Ruangan</th><th>Petugas</th></tr></thead><tbody>`;
-                
-                const movements = [...this.data.movements].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                if(movements.length > 0) {
-                    movements.forEach(m => {
-                        const apar = this.data.apars.find(a => a.id == m.aparId);
-                        const kode = apar ? apar.kode : 'Unknown';
-                        table2 += `<tr><td>${new Date(m.timestamp).toLocaleString('id-ID')}</td><td>${kode}</td><td>${m.oldLocation}</td><td>${m.newLocation}</td><td>${m.petugas}</td></tr>`;
-                    });
-                } else {
-                    table2 += `<tr><td colspan="5" style="text-align:center;">Belum ada riwayat perpindahan.</td></tr>`;
-                }
-                table2 += `</tbody></table>`;
-
-                const fullContent = table1 + table2;
-                const a = document.createElement('a'); 
-                a.href = window.URL.createObjectURL(new Blob([fullContent], { type: 'application/vnd.ms-excel' })); 
-                a.download = `Laporan_Lengkap_APAR_RSJMM.xls`; 
-                a.click();
-            },
-            
-            // --- UTILS ---
             toggleLoading: function(show, text) { const o = document.getElementById('loadingOverlay'); if(show) { o.style.display = 'flex'; if(text) document.getElementById('loadingText').innerText = text; } else { o.style.display = 'none'; } },
             showToast: function(msg, color) { let t = document.getElementById('toast-msg'); if(!t) { t=document.createElement('div'); t.id='toast-msg'; document.body.appendChild(t); } t.className = `fixed bottom-4 right-4 px-4 py-2 rounded bg-${color}-600 text-white text-sm shadow-lg z-50 fade-in`; t.innerText = msg; t.style.display='block'; setTimeout(()=>t.style.display='none', 3000); },
             navigate: function(id) { 
@@ -1218,24 +922,18 @@
             },
             getLastCheck: function(id) { return this.data.checks.filter(c => c.aparId == id).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0]; },
             
-            // --- FUNGSI UPDATE LIVE STATUS ---
             updateLiveStatus: function() { 
                 const checks = document.querySelectorAll('input[name="checkItem"]');
                 const all = Array.from(checks).every(c => c.checked);
-                // Cek No 5 (index 4) dan No 8 (index 7)
                 const tekanananJelek = !checks[4].checked;
                 const isiBeku = !checks[7].checked;
-
-                let msg = '';
-                let cls = '';
-                const photoBox = document.getElementById('evidenceContainer');
-
+                let msg = ''; let cls = ''; const photoBox = document.getElementById('evidenceContainer');
                 if (all) {
                     msg = '<div class="text-green-600 font-bold"><i class="fa-solid fa-check-circle text-2xl"></i><br>KONDISI BAIK</div>';
                     cls = 'border-green-300 bg-green-50';
-                    photoBox.classList.add('hidden'); // Sembunyikan upload foto
+                    photoBox.classList.add('hidden'); 
                 } else {
-                    photoBox.classList.remove('hidden'); // Tampilkan upload foto
+                    photoBox.classList.remove('hidden'); 
                     if (tekanananJelek || isiBeku) {
                         msg = '<div class="text-red-600 font-bold"><i class="fa-solid fa-fire-extinguisher text-2xl"></i><br>APAR HARUS DIISI ULANG</div>';
                         cls = 'border-red-300 bg-red-50';
@@ -1244,10 +942,8 @@
                         cls = 'border-red-300 bg-red-50';
                     }
                 }
-
                 const box = document.getElementById('liveStatusBox');
-                box.innerHTML = msg;
-                box.className = `mb-6 p-4 rounded-lg border-2 text-center transition ${cls}`;
+                box.innerHTML = msg; box.className = `mb-6 p-4 rounded-lg border-2 text-center transition ${cls}`;
             },
 
             showChecklistForm: function(id) { 
@@ -1257,34 +953,71 @@
                 document.getElementById('inputCheckDate').value = new Date().toISOString().split('T')[0]; 
                 document.getElementById('inputNotes').value=''; 
                 document.getElementById('inputPetugas').value= localStorage.getItem('petugasName') || ''; 
-                document.getElementById('evidencePhoto').value = ""; // Reset file
-                
-                // FEATURE: START GPS CAPTURE
-                document.getElementById('gpsStatus').innerHTML = '<i class="fa-solid fa-location-crosshairs animate-pulse"></i> Mencari Lokasi GPS...';
-                document.getElementById('gpsCoords').value = "";
-                
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            const coords = `${pos.coords.latitude}, ${pos.coords.longitude}`;
-                            document.getElementById('gpsCoords').value = coords;
-                            document.getElementById('gpsStatus').innerHTML = `<span class="text-green-600"><i class="fa-solid fa-location-dot"></i> Lokasi Terkunci: ${coords}</span>`;
-                        },
-                        (err) => {
-                            document.getElementById('gpsStatus').innerHTML = '<span class="text-red-500">Gagal mengambil lokasi. Pastikan GPS Aktif.</span>';
-                        },
-                        { enableHighAccuracy: true, timeout: 5000 }
-                    );
-                }
-
+                document.getElementById('evidencePhoto').value = ""; 
                 this.updateLiveStatus(); 
                 this.renderMiniHistory(id,'miniHistoryBody'); 
             },
             backToDetail: function() { this.showDetail(document.getElementById('checkAparId').value); },
             openLocation: function(loc) { window.open(`https://www.google.com/maps/search/${encodeURIComponent(loc + " RSJMM Bogor")}`, '_blank'); },
-            printAllLabels: function() { /* (Logic same as prev) */ if(this.data.apars.length===0) return; const c = document.getElementById('printAllArea'); c.innerHTML=''; this.data.apars.forEach(a=>{ const d=document.createElement('div'); d.className='qr-card'; d.innerHTML=`<b>${a.kode}</b><div id="qr-${a.id}" style="display:flex;justify-content:center;margin:5px 0;"></div><small>${a.lokasi}</small>`; c.appendChild(d); new QRCode(d.querySelector(`#qr-${a.id}`), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:80, height:80}); }); document.body.classList.add('printing-all'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-all');},1000); },
+            printAllLabels: function() { if(this.data.apars.length===0) return; const c = document.getElementById('printAllArea'); c.innerHTML=''; this.data.apars.forEach(a=>{ const d=document.createElement('div'); d.className='qr-card'; d.innerHTML=`<b>${a.kode}</b><div id="qr-${a.id}" style="display:flex;justify-content:center;margin:5px 0;"></div><small>${a.lokasi}</small>`; c.appendChild(d); new QRCode(d.querySelector(`#qr-${a.id}`), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:80, height:80}); }); document.body.classList.add('printing-all'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-all');},1000); },
             printLabel: function(id) { const a=this.data.apars.find(x=>x.id==id); if(!a)return; document.getElementById('printLabelKode').innerText=a.kode; document.getElementById('printLabelLokasi').innerText=a.lokasi; document.getElementById('printQrContainer').innerHTML=''; new QRCode(document.getElementById('printQrContainer'), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:120, height:120}); document.body.classList.add('printing-label'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-label');},500); },
-            shareStatus: async function() { const el=document.getElementById('captureArea'); el.classList.add('capturing'); try { const cvs = await html2canvas(el, {scale:2}); const win = window.open(''); win.document.write(`<img src="${cvs.toDataURL()}">`); setTimeout(()=>win.print(),500); el.classList.remove('capturing'); } catch(e){alert('Gagal Print'); el.classList.remove('capturing');}}
+            shareStatus: async function() { const el=document.getElementById('captureArea'); el.classList.add('capturing'); try { const cvs = await html2canvas(el, {scale:2}); const win = window.open(''); win.document.write(`<img src="${cvs.toDataURL()}">`); setTimeout(()=>win.print(),500); el.classList.remove('capturing'); } catch(e){alert('Gagal Print'); el.classList.remove('capturing');}},
+            compressImage: function(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const maxWidth = 600; const scaleSize = maxWidth / img.width; canvas.width = maxWidth; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.5)); } } }); },
+            submitChecklist: async function(e) {
+                e.preventDefault(); 
+                const id = document.getElementById('checkAparId').value; 
+                let allChecked = true; 
+                const checks = document.querySelectorAll('input[name="checkItem"]');
+                checks.forEach(cb => { if (!cb.checked) allChecked = false; });
+                const tekananJelek = !checks[4].checked;
+                const isiBeku = !checks[7].checked;
+                let autoNotePrefix = "";
+                if (tekanananJelek || isiBeku) { autoNotePrefix = "[HARUS DIISI ULANG] "; }
+                let imageBase64 = "";
+                if (!allChecked) {
+                    const fileInput = document.getElementById('evidencePhoto');
+                    if (fileInput.files.length === 0) { alert("WAJIB Upload Foto Bukti jika kondisi Rusak/Isi Ulang!"); return; }
+                    this.toggleLoading(true, "Mengompres Foto...");
+                    imageBase64 = await this.compressImage(fileInput.files[0]);
+                    this.toggleLoading(false);
+                    autoNotePrefix += "[FOTO TERLAMPIR] ";
+                }
+                const userNotes = document.getElementById('inputNotes').value.trim();
+                let finalNotes = autoNotePrefix + (userNotes || (allChecked ? 'Lengkap & Berfungsi' : 'Ada kerusakan'));
+                const checkData = { action: "addCheck", aparId: id, year: new Date(document.getElementById('inputCheckDate').value).getFullYear(), month: new Date(document.getElementById('inputCheckDate').value).getMonth(), timestamp: new Date(document.getElementById('inputCheckDate').value).toISOString(), isGood: allChecked, notes: finalNotes, petugas: document.getElementById('inputPetugas').value.trim(), imageData: imageBase64 };
+                const success = await this.sendData(checkData); 
+                if(success) { 
+                    this.showDetail(id); 
+                    if(allChecked) { this.showToast("Terima kasih sudah rawat aku 🤗", "green"); } else { this.showToast("Laporan kerusakan tersimpan 📸", "red"); }
+                }
+            },
+            exportToExcel: function() {
+                const sMonth = document.getElementById('monthFilter').value;
+                let table1 = `<h3 style="margin-bottom:5px;">DATA PEMERIKSAAN APAR</h3><table border="1"><thead><tr style="background:#ddd;"><th>Kode</th><th>Lokasi</th><th>Jenis</th><th>Tgl Isi</th><th>Exp</th><th>Status</th><th>Catatan</th></tr></thead><tbody>`;
+                this.data.apars.forEach(apar => {
+                    let lastCheck;
+                    if(sMonth !== "") lastCheck = this.data.checks.find(c => c.aparId == apar.id && c.month == sMonth);
+                    else lastCheck = this.getLastCheck(apar.id);
+                    let status = "BELUM CEK";
+                    if (new Date(apar.expiredDate) < new Date()) { status = "EXPIRED"; } else if (lastCheck) { status = (String(lastCheck.isGood)==='true' ? "BAIK" : "RUSAK"); if(lastCheck.notes.includes('HARUS DIISI ULANG')) status = "ISI ULANG"; }
+                    const note = lastCheck ? lastCheck.notes : "-";
+                    const refill = apar.refillDate ? new Date(apar.refillDate).toLocaleDateString('id-ID') : "-";
+                    table1 += `<tr><td>${apar.kode}</td><td>${apar.lokasi}</td><td>${apar.jenis}</td><td>${refill}</td><td>${new Date(apar.expiredDate).toLocaleDateString('id-ID')}</td><td>${status}</td><td>${note}</td></tr>`;
+                });
+                table1 += `</tbody></table><br><br>`;
+                let table2 = `<h3 style="margin-bottom:5px;">RIWAYAT PERPINDAHAN LOKASI</h3><table border="1"><thead><tr style="background:#ffedd5;"><th>Waktu</th><th>Kode APAR</th><th>Dari Ruangan</th><th>Ke Ruangan</th><th>Petugas</th></tr></thead><tbody>`;
+                const movements = [...this.data.movements].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                if(movements.length > 0) {
+                    movements.forEach(m => {
+                        const apar = this.data.apars.find(a => a.id == m.aparId);
+                        const kode = apar ? apar.kode : 'Unknown';
+                        table2 += `<tr><td>${new Date(m.timestamp).toLocaleString('id-ID')}</td><td>${kode}</td><td>${m.oldLocation}</td><td>${m.newLocation}</td><td>${m.petugas}</td></tr>`;
+                    });
+                } else { table2 += `<tr><td colspan="5" style="text-align:center;">Belum ada riwayat perpindahan.</td></tr>`; }
+                table2 += `</tbody></table>`;
+                const fullContent = table1 + table2;
+                const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([fullContent], { type: 'application/vnd.ms-excel' })); a.download = `Laporan_Lengkap_APAR_RSJMM.xls`; a.click();
+            }
         };
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
