@@ -4,53 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Monitoring APAR - RSJMM Bogor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Animations */
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Floating Icons Animation */
-        .floating-icon { position: absolute; opacity: 0.15; color: white; animation: float 6s ease-in-out infinite; z-index: 0; }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
-        .delay-1 { animation-delay: 0s; top: 10%; left: 10%; font-size: 4rem; }
-        .delay-2 { animation-delay: 2s; top: 20%; right: 15%; font-size: 3rem; }
-        .delay-3 { animation-delay: 4s; bottom: 15%; left: 20%; font-size: 5rem; }
-        .delay-4 { animation-delay: 1s; bottom: 10%; right: 10%; font-size: 4rem; }
-        .delay-5 { animation-delay: 3s; top: 50%; left: 50%; font-size: 6rem; opacity: 0.05; }
+        @keyframes shake { 
+            0% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 
+            50% { transform: rotate(0deg); } 75% { transform: rotate(15deg); } 
+            100% { transform: rotate(0deg); } 
+        }
+        .animate-shake { animation: shake 0.5s infinite ease-in-out; }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Print & Capture Utilities */
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f3f4f6; }
+        .notif-scroll::-webkit-scrollbar { width: 6px; }
+        .notif-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .notif-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
         .show-on-capture { display: none; }
         .capturing .show-on-capture { display: block; }
         .capturing .no-print { display: none !important; }
         .capturing { border-radius: 0 !important; border: 1px solid #ddd; }
-
-        /* Logic Display Modes */
+        
         body.public-mode .admin-only { display: none !important; }
-        body.scan-mode #sidebar { display: none !important; }
-        body.scan-mode #top-header { display: none !important; }
-        body.scan-mode #main-content { margin-left: 0 !important; width: 100% !important; padding-top: 0 !important; }
-        body.scan-mode main { padding: 1rem !important; }
-
-        /* Layout Utilities */
-        .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
-        .inactive-nav { color: #64748b; }
-        .inactive-nav:hover { background-color: #f8fafc; color: #334155; }
-
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        body.scan-mode nav { display: none !important; }
+        
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); z-index: 9999;
+            display: none; justify-content: center; align-items: center; flex-direction: column;
+        }
         #toast-msg { display: none; transition: opacity 0.5s ease; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
         
@@ -61,96 +47,67 @@
             body.printing-all #printAllArea, body.printing-all #printAllArea * { visibility: visible; }
             body.printing-all #printAllArea { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
             .qr-card { border: 1px solid #000; padding: 10px; text-align: center; page-break-inside: avoid; }
-            body:not(.printing-label):not(.printing-all) .no-print { display: none !important; } 
+            body:not(.printing-label):not(.printing-all) .no-print { display: none !important; }
+            body:not(.printing-label):not(.printing-all) .print-area, body:not(.printing-label):not(.printing-all) .print-area * { display: block; visibility: visible; }
         }
+        
+        /* Layout Utilities */
+        .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
+        .inactive-nav { color: #64748b; }
+        .inactive-nav:hover { background-color: #f8fafc; color: #334155; }
     </style>
 </head>
 <body class="text-gray-800 font-sans" onclick="app.closeDropdown(event)">
 
     <div id="loadingOverlay">
-        <div class="mb-4 text-blue-600 animate-bounce"><i class="fa-solid fa-fire-extinguisher text-6xl drop-shadow-lg"></i></div>
+        <div class="animate-shake mb-4 text-red-600">
+            <i class="fa-solid fa-fire-extinguisher text-6xl drop-shadow-lg"></i>
+        </div>
         <h2 class="text-xl font-bold text-gray-700">Sedang Memproses...</h2>
         <p class="text-sm text-gray-500" id="loadingText">Mohon tunggu sebentar ya</p>
     </div>
 
-    <div id="toast-msg"></div>
-
-    <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-blue-900 to-blue-600 z-[100] flex items-center justify-center p-4 overflow-hidden">
-        
-        <i class="fa-solid fa-fire-extinguisher floating-icon delay-1"></i>
-        <i class="fa-solid fa-helmet-safety floating-icon delay-2"></i>
-        <i class="fa-solid fa-biohazard floating-icon delay-3"></i>
-        <i class="fa-solid fa-notes-medical floating-icon delay-4"></i>
-        <i class="fa-solid fa-hospital floating-icon delay-5"></i>
-
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden relative z-10 fade-in h-auto md:h-[500px]">
-            <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white text-gray-800 relative">
-                <div class="mb-6">
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-blue-800 mb-2">WELCOME BACK !</h2>
-                    <p class="text-gray-500 text-sm">Enter your ID and Password to continue</p>
+    <div id="login-screen" class="hidden fixed inset-0 bg-red-900 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full fade-in relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
+            <div class="text-center mb-8">
+                <div class="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                    <i class="fa-solid fa-fire-extinguisher text-5xl text-red-600"></i>
                 </div>
-                
-                <div class="mt-auto border-l-4 border-green-500 pl-4 py-2">
-                    <p class="text-gray-600 italic font-medium text-sm">"Jaga Lingkungan, Lingkungan akan Jaga Kita"</p>
-                    <p class="text-xs text-gray-400 mt-1 uppercase tracking-wide font-bold">K3RS Marzoeki Mahdi</p>
-                </div>
+                <h1 class="text-2xl font-bold text-gray-800">LOGIN PETUGAS</h1>
+                <p class="text-xs text-red-500 font-bold uppercase tracking-widest mt-1">Sistem Monitoring APAR</p>
             </div>
-
-            <div class="w-full md:w-1/2 p-8 md:p-12 bg-gradient-to-br from-blue-600 to-blue-700 text-white flex flex-col justify-center">
-                <div class="text-center mb-8">
-                    <div class="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm border border-white/30">
-                        <img src="https://img.icons8.com/color/96/hospital-2.png" alt="Logo" class="w-12 h-12">
-                    </div>
-                    <h3 class="text-xl font-bold tracking-wide">Sign In to Access</h3>
-                    <h1 class="text-2xl font-extrabold tracking-widest text-white/90">SIM-APAR</h1>
-                </div>
-
-                <form onsubmit="app.handleLogin(event)" class="space-y-4">
-                    <div class="relative group">
-                        <i class="fa-solid fa-user absolute left-4 top-3.5 text-blue-200 group-focus-within:text-white transition"></i>
-                        <input type="text" id="loginUser" class="w-full bg-white/20 border border-white/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-blue-200 focus:outline-none focus:bg-white/30 focus:border-white transition" placeholder="Enter Username" required>
-                    </div>
-                    <div class="relative group">
-                        <i class="fa-solid fa-lock absolute left-4 top-3.5 text-blue-200 group-focus-within:text-white transition"></i>
-                        <input type="password" id="loginPass" class="w-full bg-white/20 border border-white/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-blue-200 focus:outline-none focus:bg-white/30 focus:border-white transition" placeholder="Enter Password" required>
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-lg shadow-lg transform hover:-translate-y-0.5 transition duration-200 mt-4 uppercase tracking-wider">LOGIN</button>
-                    
-                    <button type="button" onclick="app.cancelLogin()" class="w-full text-center text-xs text-blue-200 hover:text-white mt-4 underline decoration-blue-400/50">Batal / Kembali ke Menu</button>
-                </form>
-            </div>
+            <form onsubmit="app.handleLogin(event)">
+                <div class="mb-4"><label class="block text-gray-600 text-xs font-bold mb-2 uppercase">Username</label><input type="text" id="loginUser" class="w-full border p-3 rounded-lg" placeholder="Username" required></div>
+                <div class="mb-8"><label class="block text-gray-600 text-xs font-bold mb-2 uppercase">Password</label><input type="password" id="loginPass" class="w-full border p-3 rounded-lg" placeholder="Password" required></div>
+                <button type="submit" class="w-full bg-red-700 text-white font-bold py-3.5 rounded-lg hover:bg-red-800 transition shadow-lg">MASUK APLIKASI</button>
+                <button type="button" onclick="app.cancelLogin()" class="w-full mt-3 text-gray-500 text-sm font-bold hover:text-gray-700">Batal / Kembali</button>
+            </form>
         </div>
-        <div class="absolute bottom-4 text-white/50 text-[10px]">Copyright ©2026 Instalasi K3KL All Rights Reserved</div>
     </div>
 
     <div id="scan-choice-screen" class="hidden fixed inset-0 bg-gray-100 z-[90] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full fade-in text-center border-t-8 border-blue-600 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-50 rounded-full blur-2xl"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-green-50 rounded-full blur-2xl"></div>
-
-            <div class="bg-blue-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce shadow-inner">
-                <i class="fa-solid fa-qrcode text-5xl text-blue-600"></i>
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full fade-in text-center">
+            <div class="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <i class="fa-solid fa-qrcode text-4xl text-red-600"></i>
             </div>
-            <h2 class="text-2xl font-extrabold text-gray-800 mb-2">APAR Terdeteksi!</h2>
-            <p class="text-sm text-gray-500 mb-8" id="scanChoiceKode">Silakan pilih menu akses anda:</p>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">APAR Terdeteksi!</h2>
+            <p class="text-sm text-gray-500 mb-8" id="scanChoiceKode">Silakan pilih opsi di bawah ini:</p>
             
-            <button onclick="app.handleScanOption('inspect')" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg mb-4 flex items-center gap-4 transition transform hover:scale-105 group">
-                <div class="bg-white/20 p-3 rounded-lg group-hover:bg-white/30 transition"><i class="fa-solid fa-user-shield text-2xl"></i></div>
-                <div class="text-left flex-1">
-                    <div class="text-[10px] uppercase text-blue-100 tracking-wider font-bold">Login Petugas</div>
-                    <div class="text-lg leading-tight">INSPEKSI UNIT</div>
+            <button onclick="app.handleScanOption('inspect')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg mb-4 flex items-center justify-center gap-3 transition transform hover:scale-105">
+                <i class="fa-solid fa-clipboard-check text-2xl"></i>
+                <div class="text-left">
+                    <div class="text-sm uppercase tracking-wide">Petugas K3</div>
+                    <div class="text-lg">INSPEKSI APAR</div>
                 </div>
-                <i class="fa-solid fa-chevron-right text-blue-200"></i>
             </button>
 
-            <button onclick="app.handleScanOption('history')" class="w-full bg-white border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-gray-700 font-bold py-4 px-6 rounded-xl shadow-sm flex items-center gap-4 transition transform hover:scale-105 group">
-                <div class="bg-gray-100 p-3 rounded-lg group-hover:bg-white transition"><i class="fa-solid fa-clock-rotate-left text-2xl text-gray-500 group-hover:text-blue-500"></i></div>
-                <div class="text-left flex-1">
-                    <div class="text-[10px] uppercase text-gray-400 tracking-wider font-bold group-hover:text-blue-400">Akses Publik</div>
-                    <div class="text-lg leading-tight text-gray-800 group-hover:text-blue-700">LIHAT RIWAYAT</div>
+            <button onclick="app.handleScanOption('history')" class="w-full bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-3 transition">
+                <i class="fa-solid fa-clock-rotate-left text-2xl text-blue-500"></i>
+                <div class="text-left">
+                    <div class="text-sm uppercase tracking-wide text-gray-400">Umum / Publik</div>
+                    <div class="text-lg">LIHAT RIWAYAT</div>
                 </div>
-                <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-300"></i>
             </button>
         </div>
     </div>
@@ -366,9 +323,9 @@
                     </div>
                 </div>
 
-                <div id="view-settings" class="view-section hidden fade-in max-w-3xl mx-auto">
-                    <div class="grid gap-8">
-                        <div class="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-blue-500">
+                <div id="view-settings" class="view-section hidden fade-in max-w-5xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-blue-500 h-full">
                             <h3 class="font-bold text-xl text-gray-800 mb-6 flex items-center"><span class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-blue-600"><i class="fa-solid fa-shield-halved"></i></span> Keamanan Akun</h3>
                             <form onsubmit="app.updateAccount(event)" class="space-y-5">
                                 <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Username Baru</label><input type="text" id="setNewUser" class="w-full border-2 border-gray-100 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-500 transition" placeholder="Kosongkan jika tidak ingin mengubah"></div>
@@ -382,13 +339,15 @@
                             </form>
                         </div>
 
-                        <div class="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-gray-300">
-                            <h3 class="font-bold text-xl text-gray-800 mb-6 flex items-center"><span class="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-gray-600"><i class="fa-solid fa-circle-info"></i></span> Tentang Aplikasi</h3>
-                            <div class="space-y-4 text-sm">
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Nama Aplikasi</span><span class="font-bold text-gray-800">APAR Monitor Mobile</span></div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Versi</span><span class="font-bold bg-blue-600 text-white px-3 py-1 rounded-full text-xs">v3.0.1 Ultimate</span></div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Developer</span><span class="font-bold text-gray-800">Tim IT K3KL</span></div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Update Terakhir</span><span class="font-bold text-gray-800">Januari 2026</span></div>
+                        <div class="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-gray-300 h-full flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-xl text-gray-800 mb-6 flex items-center"><span class="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-gray-600"><i class="fa-solid fa-circle-info"></i></span> Tentang Aplikasi</h3>
+                                <div class="space-y-4 text-sm">
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Nama Aplikasi</span><span class="font-bold text-gray-800">APAR Monitor Mobile</span></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Versi</span><span class="font-bold bg-blue-600 text-white px-3 py-1 rounded-full text-xs">v3.0.1 Ultimate</span></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Developer</span><span class="font-bold text-gray-800">Tim IT K3KL</span></div>
+                                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"><span>Update Terakhir</span><span class="font-bold text-gray-800">Januari 2026</span></div>
+                                </div>
                             </div>
                             <div class="text-center text-xs text-gray-400 mt-6 pt-6 border-t font-medium">Hak Cipta Dilindungi © 2026 RS Marzoeki Mahdi</div>
                         </div>
