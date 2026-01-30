@@ -8,16 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
-        
-        /* Animations */
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .floating-icon { position: absolute; opacity: 0.15; color: white; animation: float 6s ease-in-out infinite; z-index: 0; }
         @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
         .delay-1 { animation-delay: 0s; top: 10%; left: 10%; font-size: 4rem; }
@@ -25,8 +20,6 @@
         .delay-3 { animation-delay: 4s; bottom: 15%; left: 20%; font-size: 5rem; }
         .delay-4 { animation-delay: 1s; bottom: 10%; right: 10%; font-size: 4rem; }
         .delay-5 { animation-delay: 3s; top: 50%; left: 50%; font-size: 6rem; opacity: 0.05; }
-
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -34,34 +27,18 @@
         .capturing .show-on-capture { display: block; }
         .capturing .no-print { display: none !important; }
         .capturing { border-radius: 0 !important; border: 1px solid #ddd; }
-        
         body.public-mode .admin-only { display: none !important; }
-        
-        /* SCAN MODE: HIDE SIDEBAR & HEADER EXPLICITLY */
         body.scan-mode #sidebar { display: none !important; }
         body.scan-mode #top-header { display: none !important; }
         body.scan-mode #main-content { margin-left: 0 !important; width: 100% !important; padding-top: 0 !important; }
         body.scan-mode main { padding: 1rem !important; }
-
-        /* LAYOUT UTILITIES */
         .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
         .inactive-nav { color: #64748b; }
         .inactive-nav:hover { background-color: #f8fafc; color: #334155; }
-
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
         #toast-msg { display: none; transition: opacity 0.5s ease; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
-        
-        @media print {
-            body * { visibility: hidden; }
-            body.printing-label #labelPrintArea, body.printing-label #labelPrintArea * { visibility: visible; }
-            body.printing-label #labelPrintArea { position: absolute; left: 0; top: 0; width: 100%; display: flex; justify-content: center; align-items: center; padding-top: 20px; }
-            body.printing-all #printAllArea, body.printing-all #printAllArea * { visibility: visible; }
-            body.printing-all #printAllArea { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-            .qr-card { border: 1px solid #000; padding: 10px; text-align: center; page-break-inside: avoid; }
-            body:not(.printing-label):not(.printing-all) .no-print { display: none !important; }
-            body:not(.printing-label):not(.printing-all) .print-area, body:not(.printing-label):not(.printing-all) .print-area * { display: block; visibility: visible; }
-        }
+        @media print { body * { visibility: hidden; } body.printing-label #labelPrintArea, body.printing-label #labelPrintArea * { visibility: visible; } body.printing-label #labelPrintArea { position: absolute; left: 0; top: 0; width: 100%; display: flex; justify-content: center; align-items: center; padding-top: 20px; } body.printing-all #printAllArea, body.printing-all #printAllArea * { visibility: visible; } body.printing-all #printAllArea { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; } .qr-card { border: 1px solid #000; padding: 10px; text-align: center; page-break-inside: avoid; } body:not(.printing-label):not(.printing-all) .no-print { display: none !important; } }
     </style>
 </head>
 <body class="text-gray-800 font-sans" onclick="app.closeDropdown(event)">
@@ -79,7 +56,6 @@
         <i class="fa-solid fa-biohazard floating-icon delay-3"></i>
         <i class="fa-solid fa-notes-medical floating-icon delay-4"></i>
         <i class="fa-solid fa-hospital floating-icon delay-5"></i>
-
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden relative z-10 fade-in h-auto md:h-[500px]">
             <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white text-gray-800 relative">
                 <div class="mb-6"><h2 class="text-3xl md:text-4xl font-extrabold text-blue-800 mb-2">WELCOME BACK !</h2><p class="text-gray-500 text-sm">Enter your ID and Password to continue</p></div>
@@ -138,13 +114,12 @@
         </aside>
 
         <div id="main-content" class="flex-1 flex flex-col md:ml-64 transition-all duration-300 relative w-full">
-            
             <header id="top-header" class="h-auto md:h-24 bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center px-8 py-5 z-10">
                 <div><h2 class="text-2xl font-bold tracking-tight" id="pageTitle">BERANDA</h2><p class="text-blue-200 text-xs md:text-sm font-medium">Sistem Informasi Pelaporan & Monitoring APAR</p></div>
                 <div class="mt-4 md:mt-0 flex flex-col items-end">
                     <div class="flex items-center gap-3 mb-1.5">
                         <div class="text-right"><span class="block text-xs text-blue-200">Halo, Petugas</span><span id="headerUserName" class="block text-sm font-bold leading-none">Guest</span></div>
-                        <img src="https://ui-avatars.com/api/?name=Petugas+K3&background=ffffff&color=2563eb" class="w-10 h-10 rounded-full border border-white/20 object-cover shadow-sm" alt="Profile">
+                        <img id="headerProfileImg" src="" class="w-10 h-10 rounded-full border border-white/20 object-cover shadow-sm bg-white" alt="Profile">
                     </div>
                     <div class="flex items-center gap-3 text-[10px] md:text-xs text-blue-100 bg-blue-800/30 px-3 py-1.5 rounded-full border border-blue-500/30"><span id="headerDate"><i class="fa-regular fa-calendar mr-1"></i> -</span><span class="w-px h-3 bg-blue-500/50 mx-1"></span><span id="clockDisplay" class="font-mono font-bold text-yellow-300"><i class="fa-regular fa-clock mr-1"></i> --:--</span></div>
                 </div>
@@ -211,7 +186,7 @@
                         <div class="px-10 pb-10">
                             <div class="relative flex justify-between items-end -mt-16 mb-8">
                                 <div class="w-32 h-32 rounded-full bg-white p-1.5 shadow-xl">
-                                    <img src="https://ui-avatars.com/api/?name=Petugas+K3&background=random&size=128" class="w-full h-full rounded-full object-cover" alt="Profile">
+                                    <img id="profilePageImg" src="" class="w-full h-full rounded-full object-cover" alt="Profile">
                                 </div>
                                 <div class="mb-4"><span class="bg-green-100 text-green-700 text-xs font-extrabold px-4 py-1.5 rounded-full border border-green-200 flex items-center gap-2 shadow-sm"><span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> ONLINE</span></div>
                             </div>
@@ -389,13 +364,15 @@
                 e.preventDefault(); const u = document.getElementById('loginUser').value; const p = document.getElementById('loginPass').value; this.toggleLoading(true, "Memeriksa Database...");
                 try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) }); const j = await r.json();
                     if (j.status === 'success') { localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', j.role); localStorage.setItem('petugasName', j.petugasName); localStorage.setItem('petugasId', u); 
+                        if(j.photoUrl) localStorage.setItem('petugasPhoto', j.photoUrl);
+                        
                         if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
                         if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } this.data.pendingScanAction = null; document.getElementById('main-app').classList.remove('hidden'); this.showChecklistForm(this.data.pendingScanId); } else { this.init(); }
                     } else { alert(j.message || 'Login Gagal!'); }
                 } catch (err) { console.error(err); alert('Gagal terhubung ke server.'); } finally { this.toggleLoading(false); }
             },
             cancelLogin: function() { document.getElementById('login-screen').classList.add('hidden'); const scanId = new URLSearchParams(window.location.search).get('id'); if (scanId) { document.getElementById('scan-choice-screen').classList.remove('hidden'); } else { document.getElementById('login-screen').classList.remove('hidden'); } },
-            handleLogout: function() { if(confirm("Yakin ingin keluar?")) { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userRole'); localStorage.removeItem('petugasName'); localStorage.removeItem('petugasId'); location.reload(); } },
+            handleLogout: function() { if(confirm("Yakin ingin keluar?")) { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userRole'); localStorage.removeItem('petugasName'); localStorage.removeItem('petugasId'); localStorage.removeItem('petugasPhoto'); location.reload(); } },
             
             init: async function() {
                 const urlParams = new URLSearchParams(window.location.search); const scanId = urlParams.get('id');
@@ -410,6 +387,13 @@
                 const userName = localStorage.getItem('petugasName') || 'User';
                 document.getElementById('headerUserName').innerText = userName;
                 
+                // UPDATE PHOTO
+                const photoUrl = localStorage.getItem('petugasPhoto');
+                const defaultUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ffffff&color=2563eb`;
+                const finalUrl = (photoUrl && photoUrl.trim() !== "") ? photoUrl : defaultUrl;
+                document.getElementById('headerProfileImg').src = finalUrl;
+                document.getElementById('profilePageImg').src = finalUrl;
+
                 const now = new Date();
                 const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
                 const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -441,7 +425,6 @@
             resetDatabase: async function() { if(localStorage.getItem('userRole') !== 'Admin') { alert('Hanya ADMIN!'); return; } const p = prompt("Password ADMIN:"); if (p === "admin123") { if(confirm("YAKIN HAPUS SEMUA?")) { const s = await this.sendData({ action: "resetDatabase" }); if(s) { localStorage.removeItem('cached_apars'); localStorage.removeItem('cached_checks'); localStorage.removeItem('dismissed'); alert("Reset Berhasil."); location.reload(); } } } else if (p!==null) { alert("Password Salah!"); } },
 
             changePage: function(d) { this.data.currentPage += d; this.renderDashboard(); },
-            
             renderDashboard: function() {
                 const tb = document.getElementById('aparTableBody'); const em = document.getElementById('emptyState'); tb.innerHTML = '';
                 const yEl = document.getElementById('yearFilter'); const mEl = document.getElementById('monthFilter');
@@ -456,7 +439,6 @@
                     else { lastCheck = this.getLastCheck(a.id); }
                     const isExpired = new Date(a.expiredDate) < new Date();
                     let st = "belum dicek"; 
-                    // REMOVED AUTO STATUS EXPIRED
                     if (lastCheck) { st = String(lastCheck.isGood)==='true' ? "baik" : "rusak"; }
                     const d1 = a.refillDate ? new Date(a.refillDate).toLocaleDateString('id-ID') : ""; const d2 = new Date(a.expiredDate).toLocaleDateString('id-ID');
                     const comb = `${a.kode} ${a.lokasi} ${a.jenis} ${a.berat} ${d1} ${d2} ${st}`.toLowerCase();
@@ -469,7 +451,6 @@
                     let tC;
                     if(sMonth !== "") { tC = this.data.checks.find(c => String(c.aparId) === String(a.id) && String(c.year) === String(sYear) && String(c.month) === String(sMonth)); if(tC) sChecked++; } 
                     else { const curC = this.data.checks.find(c => String(c.aparId) === String(a.id) && c.year == new Date().getFullYear() && c.month == new Date().getMonth()); if(curC) sChecked++; tC = this.getLastCheck(a.id); }
-                    // REMOVED AUTO BAD STAT IF EXPIRED
                     if(tC) { String(tC.isGood)==='true' ? sGood++ : sBad++; }
                 });
 
@@ -490,19 +471,12 @@
                     const isExp = new Date(a.expiredDate) < new Date(); 
                     let bg = '<span class="bg-gray-100 text-gray-400 py-1 px-2 rounded-full text-[10px] font-bold">BELUM</span>';
                     
-                    // KEEP EXPIRED BADGE FOR INFO, BUT STATUS FOLLOWS LAST CHECK
                     if (isExp) { bg = `<span class="bg-red-100 text-red-700 py-1 px-2 rounded-full text-[10px] font-bold border border-red-200">EXPIRED</span>`; } 
                     
                     if (lC) { 
                         const isG = String(lC.isGood).toLowerCase() === 'true'; const mN = this.data.months[lC.month];
-                        if (isG) { 
-                             // If expired but last check good, keep good but maybe show warning? For now stick to request: remove auto expired status logic overriding.
-                             bg = `<span class="bg-green-100 text-green-700 py-1 px-2 rounded-full text-[10px] font-bold border border-green-200">BAIK (${mN})</span>`; 
-                        } 
-                        else { 
-                            if (lC.notes && lC.notes.includes('HARUS DIISI ULANG')) { bg = `<span class="bg-purple-100 text-purple-700 py-1 px-2 rounded-full text-[10px] font-bold border border-purple-200">REFILL (${mN})</span>`; } 
-                            else { bg = `<span class="bg-red-100 text-red-700 py-1 px-2 rounded-full text-[10px] font-bold border border-red-200">RUSAK (${mN})</span>`; } 
-                        }
+                        if (isG) { bg = `<span class="bg-green-100 text-green-700 py-1 px-2 rounded-full text-[10px] font-bold border border-green-200">BAIK (${mN})</span>`; } 
+                        else { if (lC.notes && lC.notes.includes('HARUS DIISI ULANG')) { bg = `<span class="bg-purple-100 text-purple-700 py-1 px-2 rounded-full text-[10px] font-bold border border-purple-200">REFILL (${mN})</span>`; } else { bg = `<span class="bg-red-100 text-red-700 py-1 px-2 rounded-full text-[10px] font-bold border border-red-200">RUSAK (${mN})</span>`; } }
                     }
                     const eD = `<span class="${isExp?'text-red-600 font-bold bg-red-50 px-1 rounded':''}">${new Date(a.expiredDate).toLocaleDateString('id-ID')}</span>`;
                     const rD = a.refillDate ? new Date(a.refillDate).toLocaleDateString('id-ID') : "-";
