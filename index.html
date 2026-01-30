@@ -508,12 +508,20 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const scanId = urlParams.get('id');
 
+                // FIX: Gunakan data cache jika ada agar UI langsung muncul, lalu fetch update
+                const localApars = localStorage.getItem('cached_apars'); 
+                const localChecks = localStorage.getItem('cached_checks');
+                if (localApars) { 
+                    try { 
+                        this.data.apars = JSON.parse(localApars); 
+                        this.data.checks = JSON.parse(localChecks || "[]"); 
+                    } catch(e) {} 
+                }
+
                 // Jika ada ID di URL (Scan QR), Tampilkan Pilihan Dulu (JANGAN Login Dulu)
                 if (scanId) {
-                    this.toggleLoading(true, "Memuat Data APAR..."); // Loading indicator saat scan
-                    await this.fetchDataWithTimeout(); // WAIT DATA FIRST
-                    this.toggleLoading(false);
-                    
+                    // FIX: Load background data, UI tidak block
+                    this.fetchDataWithTimeout();
                     document.getElementById('scan-choice-screen').classList.remove('hidden');
                     return;
                 }
@@ -540,8 +548,9 @@
                 if(savedPetugas) document.getElementById('inputPetugas').value = savedPetugas;
 
                 this.setupFilters();
-                const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
-                if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); this.renderDashboard(); } catch(e) {} }
+                
+                // Load data
+                this.renderDashboard();
                 this.fetchDataWithTimeout();
             },
 
@@ -568,7 +577,17 @@
                     // Logic Riwayat: Mode Publik (Tanpa Login)
                     document.body.classList.add('public-mode'); // CSS Class untuk sembunyikan tombol
                     document.getElementById('main-app').classList.remove('hidden');
-                    this.showDetail(scanId); // Ini sekarang pasti jalan karena data sudah diload di init
+                    // FIX: Pastikan data sudah siap sebelum showDetail
+                    if(this.data.apars.length > 0) {
+                        this.showDetail(scanId); 
+                    } else {
+                        // Jika data belum turun, tunggu sebentar atau force fetch
+                        this.toggleLoading(true, "Memuat Data...");
+                        this.fetchDataWithTimeout().then(() => {
+                            this.toggleLoading(false);
+                            this.showDetail(scanId);
+                        });
+                    }
                 }
             },
 
