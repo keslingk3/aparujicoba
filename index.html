@@ -510,11 +510,11 @@
 
                 // Jika ada ID di URL (Scan QR), Tampilkan Pilihan Dulu (JANGAN Login Dulu)
                 if (scanId) {
+                    this.toggleLoading(true, "Memuat Data APAR..."); // Loading indicator saat scan
+                    await this.fetchDataWithTimeout(); // WAIT DATA FIRST
+                    this.toggleLoading(false);
+                    
                     document.getElementById('scan-choice-screen').classList.remove('hidden');
-                    // Background fetch data while waiting for user choice
-                    this.fetchDataWithTimeout().then(() => {
-                        // Optional: Pre-fill QR info if needed
-                    });
                     return;
                 }
 
@@ -568,7 +568,7 @@
                     // Logic Riwayat: Mode Publik (Tanpa Login)
                     document.body.classList.add('public-mode'); // CSS Class untuk sembunyikan tombol
                     document.getElementById('main-app').classList.remove('hidden');
-                    this.showDetail(scanId);
+                    this.showDetail(scanId); // Ini sekarang pasti jalan karena data sudah diload di init
                 }
             },
 
@@ -585,7 +585,6 @@
                     this.renderDashboard(); 
                     document.getElementById('statusOnlineBadge').innerText = "ONLINE"; 
                     document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-green-500 text-white px-1 py-0.5 rounded align-top";
-                    this.toggleLoading(false);
                     this.checkNotifications();
                 } catch (err) { 
                     console.error("Fetch Error:", err); 
@@ -966,6 +965,8 @@
             submitChecklist: async function(e) {
                 e.preventDefault(); 
                 const id = document.getElementById('checkAparId').value; 
+                if (!id) return alert("ID APAR tidak ditemukan. Silakan ulangi proses scan.");
+
                 let allChecked = true; 
                 const checks = document.querySelectorAll('input[name="checkItem"]');
                 checks.forEach(cb => { if (!cb.checked) allChecked = false; });
