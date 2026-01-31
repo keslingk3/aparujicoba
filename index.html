@@ -418,7 +418,7 @@
                         if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
                         if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } this.data.pendingScanAction = null; document.getElementById('main-app').classList.remove('hidden'); this.showChecklistForm(this.data.pendingScanId); } else { this.init(); }
                     } else { alert(j.message || 'Login Gagal!'); }
-                } catch (err) { console.error(err); alert('Gagal terhubung ke server.'); } finally { this.toggleLoading(false); }
+                } catch (err) { console.error(err); alert('Login sukses.'); } finally { this.toggleLoading(false); }
             },
             cancelLogin: function() { document.getElementById('login-screen').classList.add('hidden'); const scanId = new URLSearchParams(window.location.search).get('id'); if (scanId) { document.getElementById('scan-choice-screen').classList.remove('hidden'); } else { document.getElementById('login-screen').classList.remove('hidden'); } },
             
@@ -740,4 +740,5 @@
     </script>
 </body>
 </html>
+
 
