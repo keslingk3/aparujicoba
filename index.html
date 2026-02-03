@@ -251,7 +251,7 @@
                 </div>
 
                 <div id="view-detail" class="view-section hidden fade-in max-w-xl mx-auto">
-                    <button onclick="app.navigate('dashboard')" class="admin-only mb-6 text-gray-400 hover:text-blue-600 font-bold text-sm flex items-center gap-2 transition"><div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></div> Kembali Dashboard</button>
+                    <button onclick="app.handleDetailBack()" class="mb-6 text-gray-400 hover:text-blue-600 font-bold text-sm flex items-center gap-2 transition"><div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></div> Kembali</button>
                     
                     <div id="captureArea" class="bg-white p-8 rounded-2xl shadow-xl border-t-8 border-blue-600 print-area relative mb-8">
                         <div id="scanStatusBanner" class="hidden mb-8 p-6 rounded-xl text-center shadow-inner">
@@ -416,13 +416,19 @@
                     if (j.status === 'success') { localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', j.role); localStorage.setItem('petugasName', j.petugasName); localStorage.setItem('petugasId', u); 
                         if(j.photoUrl) localStorage.setItem('petugasPhoto', this.formatPhotoUrl(j.photoUrl)); else localStorage.removeItem('petugasPhoto'); 
                         if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
-                        if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } this.data.pendingScanAction = null; document.getElementById('main-app').classList.remove('hidden'); this.showChecklistForm(this.data.pendingScanId); } else { this.init(); }
+                        
+                        // REVISI: Jika Login dari Scan, masuk ke Detail Dulu (bukan checklist langsung)
+                        if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { 
+                            if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } 
+                            this.data.pendingScanAction = null; 
+                            document.getElementById('main-app').classList.remove('hidden'); 
+                            this.showDetail(this.data.pendingScanId); // Ubah ke showDetail
+                        } else { this.init(); }
                     } else { alert(j.message || 'Login Gagal!'); }
                 } catch (err) { console.error(err); alert('Login sukses.'); } finally { this.toggleLoading(false); }
             },
             cancelLogin: function() { document.getElementById('login-screen').classList.add('hidden'); const scanId = new URLSearchParams(window.location.search).get('id'); if (scanId) { document.getElementById('scan-choice-screen').classList.remove('hidden'); } else { document.getElementById('login-screen').classList.remove('hidden'); } },
             
-            // REVISI: Logika Logout dengan Modal Baru
             handleLogout: function() { 
                 document.getElementById('logoutModal').classList.remove('hidden');
             },
@@ -458,8 +464,30 @@
 
             handleScanOption: function(choice) {
                 const scanId = new URLSearchParams(window.location.search).get('id'); document.getElementById('scan-choice-screen').classList.add('hidden'); document.body.classList.add('scan-mode');
-                if (choice === 'inspect') { if (localStorage.getItem('isLoggedIn')) { document.getElementById('main-app').classList.remove('hidden'); this.showChecklistForm(scanId); } else { this.data.pendingScanAction = 'inspect'; this.data.pendingScanId = scanId; document.getElementById('login-screen').classList.remove('hidden'); } } 
+                // REVISI: Inspect login -> ke Detail dulu
+                if (choice === 'inspect') { 
+                    if (localStorage.getItem('isLoggedIn')) { 
+                        document.getElementById('main-app').classList.remove('hidden'); 
+                        this.showDetail(scanId); // Ubah dari Checklist ke Detail
+                    } else { 
+                        this.data.pendingScanAction = 'inspect'; 
+                        this.data.pendingScanId = scanId; 
+                        document.getElementById('login-screen').classList.remove('hidden'); 
+                    } 
+                } 
                 else if (choice === 'history') { document.body.classList.add('public-mode'); document.getElementById('main-app').classList.remove('hidden'); if(this.data.apars.length > 0) { this.showDetail(scanId); } else { this.toggleLoading(true, "Memuat Data..."); this.fetchDataWithTimeout().then(() => { this.toggleLoading(false); this.showDetail(scanId); }); } }
+            },
+
+            // REVISI: Logika Tombol Kembali di Detail
+            handleDetailBack: function() {
+                if (document.body.classList.contains('public-mode')) {
+                    // Jika mode publik (scan), kembali ke layar pilihan scan
+                    document.getElementById('main-app').classList.add('hidden');
+                    document.getElementById('scan-choice-screen').classList.remove('hidden');
+                } else {
+                    // Jika mode admin biasa, kembali ke dashboard
+                    this.navigate('dashboard');
+                }
             },
 
             fetchDataWithTimeout: async function() {
@@ -756,6 +784,3 @@
     </script>
 </body>
 </html>
-
-
-
