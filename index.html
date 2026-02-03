@@ -27,14 +27,24 @@
         .capturing .show-on-capture { display: block; }
         .capturing .no-print { display: none !important; }
         .capturing { border-radius: 0 !important; border: 1px solid #ddd; }
+        
+        /* Default: Admin Only disembunyikan jika Public Mode */
         body.public-mode .admin-only { display: none !important; }
+        
         body.scan-mode #sidebar { display: none !important; }
         body.scan-mode #top-header { display: none !important; }
         body.scan-mode #main-content { margin-left: 0 !important; width: 100% !important; padding-top: 0 !important; }
         body.scan-mode main { padding: 1rem !important; }
-        /* REVISI: Sembunyikan tombol kembali saat mode scan */
-        body.scan-mode #backBtnDetail { display: none !important; }
+
+        /* REVISI KHUSUS SCAN MODE: Membuka Akses Menu & Sembunyikan Navigasi */
+        body.scan-mode #backBtnDetail { display: none !important; } /* Sembunyikan Tombol Kembali */
         
+        /* Paksa tombol admin muncul saat scan mode meskipun belum login */
+        body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
+        body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: block !important; }
+        body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
+        body.scan-mode #view-add-apar .admin-only { display: block !important; } /* Tombol save di form edit */
+
         .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
         .inactive-nav { color: #64748b; }
         .inactive-nav:hover { background-color: #f8fafc; color: #334155; }
@@ -233,7 +243,7 @@
                                 <div><label class="block text-gray-700 text-xs font-bold uppercase mb-2">Tanggal Kadaluarsa</label><input type="date" id="inputExpired" required class="w-full border-2 border-red-100 rounded-xl px-4 py-3 bg-red-50 text-red-800 font-bold focus:outline-none focus:border-red-500"></div>
                             </div>
                             <div class="pt-6 flex justify-end">
-                                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl shadow-lg hover:bg-blue-700 font-bold transition transform hover:-translate-y-0.5" id="btnSaveApar">SIMPAN DATA</button>
+                                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl shadow-lg hover:bg-blue-700 font-bold transition transform hover:-translate-y-0.5 admin-only" id="btnSaveApar">SIMPAN DATA</button>
                             </div>
                         </form>
                     </div>
@@ -406,12 +416,12 @@
                         if(j.photoUrl) localStorage.setItem('petugasPhoto', this.formatPhotoUrl(j.photoUrl)); else localStorage.removeItem('petugasPhoto'); 
                         if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
                         
-                        // REVISI: Jika Login dari Scan, masuk ke Detail Dulu (bukan checklist langsung)
+                        // Jika Login dari Scan, masuk ke Detail Dulu
                         if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { 
                             if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } 
                             this.data.pendingScanAction = null; 
                             document.getElementById('main-app').classList.remove('hidden'); 
-                            this.showDetail(this.data.pendingScanId); // Ubah ke showDetail
+                            this.showDetail(this.data.pendingScanId); 
                         } else { this.init(); }
                     } else { alert(j.message || 'Login Gagal!'); }
                 } catch (err) { console.error(err); alert('Login sukses.'); } finally { this.toggleLoading(false); }
@@ -435,22 +445,21 @@
                 const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
                 if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); } catch(e) {} }
                 
-                // REVISI: BYPASS SCREEN PILIHAN SCAN
+                // --- LOGIKA UTAMA SCAN ID ---
                 if (scanId) { 
                     // Set mode scanning
                     document.body.classList.add('scan-mode');
                     
-                    // REVISI PENTING: MUNCULKAN MAIN-APP AGAR TIDAK BLANK
+                    // Munculkan aplikasi utama agar tidak blank
                     document.getElementById('main-app').classList.remove('hidden');
 
-                    // Jika belum login, set mode publik
-                    if (!localStorage.getItem('isLoggedIn')) {
-                        document.body.classList.add('public-mode');
-                    }
-                    // Fetch data dan langsung tampilkan detail
+                    // BYPASS LOGIN CHECK
+                    // Langsung fetch data dan buka detail
                     this.fetchDataWithTimeout().then(() => {
                         this.showDetail(scanId);
                     });
+                    
+                    // Hentikan eksekusi di sini agar tidak redirect ke login screen
                     return; 
                 }
 
@@ -470,29 +479,16 @@
                 this.setupFilters(); this.renderDashboard(); this.fetchDataWithTimeout();
             },
 
-            handleScanOption: function(choice) {
-               // Obsolete logic removed for cleanliness but kept structure just in case
-            },
+            handleScanOption: function(choice) { },
 
             // REVISI: Logika Tombol Kembali di Detail
             handleDetailBack: function() {
+                // Di mode scan, tombol ini sudah di-hidden via CSS (#backBtnDetail { display: none }),
+                // tapi sebagai fallback logic:
                 if (document.body.classList.contains('scan-mode')) {
-                    // Jika dalam mode scan (langsung via QR)
-                    if (document.body.classList.contains('public-mode')) {
-                         // Jika publik, arahkan ke login screen agar bisa login petugas
-                         document.getElementById('main-app').classList.add('hidden');
-                         document.getElementById('login-screen').classList.remove('hidden');
-                         // Simpan scanId agar setelah login bisa balik ke detail
-                         this.data.pendingScanAction = 'inspect';
-                         this.data.pendingScanId = this.data.currentDetailId;
-                    } else {
-                         // Jika sudah login, kembali ke dashboard
-                         this.navigate('dashboard');
-                    }
-                } else {
-                    // Jika mode admin biasa, kembali ke dashboard
-                    this.navigate('dashboard');
-                }
+                     return; // Tidak melakukan apa-apa atau bisa reload page untuk reset
+                } 
+                this.navigate('dashboard');
             },
 
             fetchDataWithTimeout: async function() {
@@ -661,7 +657,32 @@
                 }); 
             },
 
-            showChecklistForm: function(id) { this.navigate('checklist'); document.getElementById('checkAparId').value = id; document.querySelectorAll('input[name="checkItem"]').forEach(c=>c.checked=true); document.getElementById('inputCheckDate').value = new Date().toISOString().split('T')[0]; document.getElementById('inputNotes').value=''; document.getElementById('inputPetugas').value= localStorage.getItem('petugasName') || ''; document.getElementById('evidencePhoto').value = ""; this.updateLiveStatus(); this.renderMiniHistory(id,'miniHistoryBody'); },
+            showChecklistForm: function(id) { 
+                this.navigate('checklist'); 
+                document.getElementById('checkAparId').value = id; 
+                document.querySelectorAll('input[name="checkItem"]').forEach(c=>c.checked=true); 
+                document.getElementById('inputCheckDate').value = new Date().toISOString().split('T')[0]; 
+                document.getElementById('inputNotes').value=''; 
+                
+                // REVISI INPUT PETUGAS:
+                const loggedUser = localStorage.getItem('petugasName');
+                const pInput = document.getElementById('inputPetugas');
+                if (loggedUser) {
+                    pInput.value = loggedUser;
+                    pInput.readOnly = true;
+                    pInput.classList.add('bg-gray-50');
+                } else {
+                    pInput.value = "";
+                    pInput.readOnly = false; // Boleh ngetik karena tidak login
+                    pInput.classList.remove('bg-gray-50');
+                    pInput.placeholder = "Masukkan Nama Petugas...";
+                    pInput.focus();
+                }
+
+                document.getElementById('evidencePhoto').value = ""; 
+                this.updateLiveStatus(); 
+                this.renderMiniHistory(id,'miniHistoryBody'); 
+            },
             backToDetail: function() { this.showDetail(document.getElementById('checkAparId').value); },
             openLocation: function(loc) { window.open(`https://www.google.com/maps/search/${encodeURIComponent(loc + " RSJMM Bogor")}`, '_blank'); },
             printAllLabels: function() { if(this.data.apars.length===0) return; const c = document.getElementById('printAllArea'); c.innerHTML=''; this.data.apars.forEach(a=>{ const d=document.createElement('div'); d.className='qr-card'; d.innerHTML=`<b>${a.kode}</b><div id="qr-${a.id}" style="display:flex;justify-content:center;margin:5px 0;"></div><small>${a.lokasi}</small>`; c.appendChild(d); new QRCode(d.querySelector(`#qr-${a.id}`), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:80, height:80}); }); document.body.classList.add('printing-all'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-all');},1000); },
