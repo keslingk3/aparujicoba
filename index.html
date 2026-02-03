@@ -79,21 +79,7 @@
         <div class="absolute bottom-4 text-white/50 text-[10px]">Copyright ©2026 Instalasi K3KL All Rights Reserved</div>
     </div>
 
-    <div id="scan-choice-screen" class="hidden fixed inset-0 bg-gray-100 z-[90] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full fade-in text-center border-t-8 border-blue-600 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-50 rounded-full blur-2xl"></div><div class="absolute -bottom-10 -left-10 w-32 h-32 bg-green-50 rounded-full blur-2xl"></div>
-            <div class="bg-blue-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce shadow-inner"><i class="fa-solid fa-qrcode text-5xl text-blue-600"></i></div>
-            <h2 class="text-2xl font-extrabold text-gray-800 mb-2">APAR Terdeteksi!</h2><p class="text-sm text-gray-500 mb-8" id="scanChoiceKode">Silakan pilih menu akses anda:</p>
-            <button onclick="app.handleScanOption('inspect')" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg mb-4 flex items-center gap-4 transition transform hover:scale-105 group">
-                <div class="bg-white/20 p-3 rounded-lg group-hover:bg-white/30 transition"><i class="fa-solid fa-user-shield text-2xl"></i></div>
-                <div class="text-left flex-1"><div class="text-[10px] uppercase text-blue-100 tracking-wider font-bold">Login Petugas</div><div class="text-lg leading-tight">INSPEKSI</div></div><i class="fa-solid fa-chevron-right text-blue-200"></i>
-            </button>
-            <button onclick="app.handleScanOption('history')" class="w-full bg-white border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-gray-700 font-bold py-4 px-6 rounded-xl shadow-sm flex items-center gap-4 transition transform hover:scale-105 group">
-                <div class="bg-gray-100 p-3 rounded-lg group-hover:bg-white transition"><i class="fa-solid fa-clock-rotate-left text-2xl text-gray-500 group-hover:text-blue-500"></i></div>
-                <div class="text-left flex-1"><div class="text-[10px] uppercase text-gray-400 tracking-wider font-bold group-hover:text-blue-400">Akses Publik</div><div class="text-lg leading-tight text-gray-800 group-hover:text-blue-700">LIHAT RIWAYAT</div></div><i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-300"></i>
-            </button>
-        </div>
-    </div>
+    <div id="scan-choice-screen" class="hidden"></div>
 
     <div id="main-app" class="hidden flex h-screen overflow-hidden bg-gray-100">
         
@@ -445,7 +431,22 @@
                 const urlParams = new URLSearchParams(window.location.search); const scanId = urlParams.get('id');
                 const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
                 if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); } catch(e) {} }
-                if (scanId) { document.getElementById('scan-choice-screen').classList.remove('hidden'); this.fetchDataWithTimeout(); return; }
+                
+                // REVISI: BYPASS SCREEN PILIHAN SCAN
+                if (scanId) { 
+                    // Set mode scanning
+                    document.body.classList.add('scan-mode');
+                    // Jika belum login, set mode publik
+                    if (!localStorage.getItem('isLoggedIn')) {
+                        document.body.classList.add('public-mode');
+                    }
+                    // Fetch data dan langsung tampilkan detail
+                    this.fetchDataWithTimeout().then(() => {
+                        this.showDetail(scanId);
+                    });
+                    return; 
+                }
+
                 if (!localStorage.getItem('isLoggedIn')) { document.getElementById('login-screen').classList.remove('hidden'); return; }
                 document.getElementById('login-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden');
                 
@@ -462,28 +463,26 @@
                 this.setupFilters(); this.renderDashboard(); this.fetchDataWithTimeout();
             },
 
+            // REVISI: Fungsi ini tidak lagi dipanggil dari UI karena menu pilihan dihapus
             handleScanOption: function(choice) {
-                const scanId = new URLSearchParams(window.location.search).get('id'); document.getElementById('scan-choice-screen').classList.add('hidden'); document.body.classList.add('scan-mode');
-                // REVISI: Inspect login -> ke Detail dulu
-                if (choice === 'inspect') { 
-                    if (localStorage.getItem('isLoggedIn')) { 
-                        document.getElementById('main-app').classList.remove('hidden'); 
-                        this.showDetail(scanId); // Ubah dari Checklist ke Detail
-                    } else { 
-                        this.data.pendingScanAction = 'inspect'; 
-                        this.data.pendingScanId = scanId; 
-                        document.getElementById('login-screen').classList.remove('hidden'); 
-                    } 
-                } 
-                else if (choice === 'history') { document.body.classList.add('public-mode'); document.getElementById('main-app').classList.remove('hidden'); if(this.data.apars.length > 0) { this.showDetail(scanId); } else { this.toggleLoading(true, "Memuat Data..."); this.fetchDataWithTimeout().then(() => { this.toggleLoading(false); this.showDetail(scanId); }); } }
+               // Obsolete logic removed for cleanliness but kept structure just in case
             },
 
             // REVISI: Logika Tombol Kembali di Detail
             handleDetailBack: function() {
-                if (document.body.classList.contains('public-mode')) {
-                    // Jika mode publik (scan), kembali ke layar pilihan scan
-                    document.getElementById('main-app').classList.add('hidden');
-                    document.getElementById('scan-choice-screen').classList.remove('hidden');
+                if (document.body.classList.contains('scan-mode')) {
+                    // Jika dalam mode scan (langsung via QR)
+                    if (document.body.classList.contains('public-mode')) {
+                         // Jika publik, arahkan ke login screen agar bisa login petugas
+                         document.getElementById('main-app').classList.add('hidden');
+                         document.getElementById('login-screen').classList.remove('hidden');
+                         // Simpan scanId agar setelah login bisa balik ke detail
+                         this.data.pendingScanAction = 'inspect';
+                         this.data.pendingScanId = this.data.currentDetailId;
+                    } else {
+                         // Jika sudah login, kembali ke dashboard
+                         this.navigate('dashboard');
+                    }
                 } else {
                     // Jika mode admin biasa, kembali ke dashboard
                     this.navigate('dashboard');
