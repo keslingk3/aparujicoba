@@ -28,18 +28,20 @@
         .capturing .no-print { display: none !important; }
         .capturing { border-radius: 0 !important; border: 1px solid #ddd; }
         
-        /* Default: Admin Only disembunyikan jika Public Mode */
+        /* Default: Admin Only disembunyikan jika Public Mode biasa */
         body.public-mode .admin-only { display: none !important; }
         
+        /* === MODE SCAN (QR CODE) === */
         body.scan-mode #sidebar { display: none !important; }
         body.scan-mode #top-header { display: none !important; }
         body.scan-mode #main-content { margin-left: 0 !important; width: 100% !important; padding-top: 0 !important; }
         body.scan-mode main { padding: 1rem !important; }
 
-        /* REVISI KHUSUS SCAN MODE: Membuka Akses Menu & Sembunyikan Navigasi */
-        body.scan-mode #backBtnDetail { display: none !important; } /* Sembunyikan Tombol Kembali */
+        /* Sembunyikan Dashboard dan Tombol Kembali saat Scan */
+        body.scan-mode #view-dashboard { display: none !important; }
+        body.scan-mode #backBtnDetail { display: none !important; } 
         
-        /* Paksa tombol admin muncul saat scan mode meskipun belum login */
+        /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
         body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: block !important; }
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
@@ -445,7 +447,7 @@
                 const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
                 if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); } catch(e) {} }
                 
-                // --- LOGIKA UTAMA SCAN ID ---
+                // --- LOGIKA UTAMA SCAN ID (REVISI FINAL) ---
                 if (scanId) { 
                     // Set mode scanning
                     document.body.classList.add('scan-mode');
@@ -453,8 +455,12 @@
                     // Munculkan aplikasi utama agar tidak blank
                     document.getElementById('main-app').classList.remove('hidden');
 
-                    // BYPASS LOGIN CHECK
-                    // Langsung fetch data dan buka detail
+                    // PAKSA KUNCI KE DETAIL VIEW SEBELUM DATA LOAD
+                    // Ini mencegah dashboard "berkedip" muncul
+                    document.querySelectorAll('.view-section').forEach(e=>e.classList.add('hidden')); 
+                    document.getElementById('view-detail').classList.remove('hidden');
+
+                    // BYPASS LOGIN CHECK & FETCH DATA
                     this.fetchDataWithTimeout().then(() => {
                         this.showDetail(scanId);
                     });
