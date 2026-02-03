@@ -436,6 +436,10 @@
                 if (scanId) { 
                     // Set mode scanning
                     document.body.classList.add('scan-mode');
+                    
+                    // REVISI PENTING: MUNCULKAN MAIN-APP AGAR TIDAK BLANK
+                    document.getElementById('main-app').classList.remove('hidden');
+
                     // Jika belum login, set mode publik
                     if (!localStorage.getItem('isLoggedIn')) {
                         document.body.classList.add('public-mode');
@@ -463,7 +467,6 @@
                 this.setupFilters(); this.renderDashboard(); this.fetchDataWithTimeout();
             },
 
-            // REVISI: Fungsi ini tidak lagi dipanggil dari UI karena menu pilihan dihapus
             handleScanOption: function(choice) {
                // Obsolete logic removed for cleanliness but kept structure just in case
             },
