@@ -44,11 +44,10 @@
         /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
         
-        /* REVISI PENTING: Perbaikan Logika Tampilan Tindak Lanjut 
-           Hanya tampilkan blok ini jika TIDAK ada class 'hidden'.
-           Jika JS menambahkan class 'hidden' (karena status baik), CSS ini tidak akan memaksa muncul.
-        */
+        /* REVISI FINAL TAMPILAN TINDAK LANJUT DI HP */
+        /* Defaultnya hidden (none) */
         body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: none; }
+        /* Hanya muncul jika JS menghapus class hidden */
         body.scan-mode #view-detail #tindakLanjutContainer.admin-only:not(.hidden) { display: block !important; }
 
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
@@ -60,6 +59,15 @@
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
         #toast-msg { display: none; transition: opacity 0.5s ease; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        
+        /* === ANIMASI CEKLIS MEMUTAR === */
+        #successAnimation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .checkmark-circle { width: 100px; height: 100px; border-radius: 50%; display: block; stroke-width: 2; stroke: #22c55e; stroke-miterlimit: 10; margin: 10% auto; box-shadow: inset 0px 0px 0px #22c55e; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+        .checkmark-check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 60px #22c55e; } }
+
         @media print { body * { visibility: hidden; } body.printing-label #labelPrintArea, body.printing-label #labelPrintArea * { visibility: visible; } body.printing-label #labelPrintArea { position: absolute; left: 0; top: 0; width: 100%; display: flex; justify-content: center; align-items: center; padding-top: 20px; } body.printing-all #printAllArea, body.printing-all #printAllArea * { visibility: visible; } body.printing-all #printAllArea { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; } .qr-card { border: 1px solid #000; padding: 10px; text-align: center; page-break-inside: avoid; } body:not(.printing-label):not(.printing-all) .no-print { display: none !important; } }
     </style>
 </head>
@@ -70,6 +78,15 @@
         <h2 class="text-xl font-bold text-gray-700">Sedang Memproses...</h2>
         <p class="text-sm text-gray-500" id="loadingText">Mohon tunggu sebentar ya</p>
     </div>
+    
+    <div id="successAnimation">
+        <svg class="checkmark-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="checkmark-circle-bg" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark-check" fill="none" stroke="#fff" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+        <h2 class="text-2xl font-bold text-green-600 mt-6 animate-pulse">BERHASIL DISIMPAN!</h2>
+    </div>
+
     <div id="toast-msg"></div>
 
     <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-blue-900 to-blue-600 z-[100] flex items-center justify-center p-4 overflow-hidden">
@@ -627,6 +644,14 @@
             toggleLoading: function(s, t) { const o = document.getElementById('loadingOverlay'); if(s) { o.style.display = 'flex'; if(t) document.getElementById('loadingText').innerText = t; } else { o.style.display = 'none'; } },
             showToast: function(m, c) { let t = document.getElementById('toast-msg'); if(!t) { t=document.createElement('div'); t.id='toast-msg'; document.body.appendChild(t); } t.className = `fixed bottom-4 right-4 px-4 py-2 rounded bg-${c}-600 text-white text-sm shadow-lg z-50 fade-in`; t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none', 3000); },
             
+            showSuccessAnimation: function() { 
+                const overlay = document.getElementById('successAnimation'); 
+                overlay.style.display = 'flex'; 
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                }, 2000); 
+            },
+
             navigate: function(id) { 
                 if(id==='dashboard') { document.getElementById('editAparId').value = ""; document.getElementById('formTitle').innerText="Tambah APAR Baru"; document.getElementById('btnSaveApar').innerText="Simpan Data"; document.getElementById('pageTitle').innerText = "BERANDA"; }
                 else if(id==='profile') { document.getElementById('pageTitle').innerText = "PROFIL USER"; this.renderProfile(); }
@@ -662,9 +687,9 @@
                 const lC = this.getLastCheck(id); const sB = document.getElementById('scanStatusBanner'); const tL = document.getElementById('tindakLanjutContainer'); const iE = new Date(apar.expiredDate) < new Date();
                 this.renderMiniHistory(id, 'detailHistoryBody'); this.renderMovementHistory(id); sB.classList.remove('hidden');
                 
-                // REVISI LOGIKA TINDAK LANJUT:
-                // Kita gunakan class 'hidden' untuk mengontrol visibilitas.
-                // CSS kita di atas sudah dikonfigurasi untuk menghormati class 'hidden' ini.
+                // --- REVISI FINAL LOGIKA TINDAK LANJUT ---
+                // Pastikan class 'hidden' ditambahkan/dihapus dengan benar.
+                // Dan gunakan inline style sebagai pengaman ganda.
                 
                 if (lC) { 
                     const isG = String(lC.isGood).toLowerCase() === 'true'; 
@@ -672,7 +697,10 @@
                         sB.className = "mb-6 p-4 rounded-lg text-center bg-green-100 border border-green-300"; 
                         document.getElementById('scanStatusText').className = "text-2xl font-black text-green-700"; 
                         document.getElementById('scanStatusText').innerHTML = 'KONDISI BAIK <i class="fa-solid fa-circle-check"></i>'; 
-                        tL.classList.add('hidden'); // Sembunyikan jika baik
+                        
+                        // FIX: Paksa sembunyikan jika BAIK
+                        tL.classList.add('hidden'); 
+                        tL.style.display = 'none'; 
                     } else { 
                         if (lC.notes && lC.notes.includes('HARUS DIISI ULANG')) { 
                             sB.className = "mb-6 p-4 rounded-lg text-center bg-purple-100 border border-purple-300 animate-pulse"; 
@@ -683,13 +711,19 @@
                             document.getElementById('scanStatusText').className = "text-2xl font-black text-red-700"; 
                             document.getElementById('scanStatusText').innerHTML = 'KONDISI RUSAK <i class="fa-solid fa-circle-xmark"></i>'; 
                         } 
-                        tL.classList.remove('hidden'); // Tampilkan jika rusak/isi ulang
+                        
+                        // FIX: Tampilkan jika RUSAK
+                        tL.classList.remove('hidden'); 
+                        tL.style.display = 'block';
                     } 
                     document.getElementById('scanStatusDate').innerText = "Cek Terakhir: " + new Date(lC.timestamp).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}); 
                 } else { 
                     sB.className = "mb-6 p-4 rounded-lg text-center bg-gray-100 border border-gray-300"; 
                     document.getElementById('scanStatusText').innerHTML = "BELUM ADA DATA"; 
-                    tL.classList.add('hidden'); // Sembunyikan jika belum ada data (aman)
+                    
+                    // FIX: Sembunyikan jika belum ada data
+                    tL.classList.add('hidden'); 
+                    tL.style.display = 'none';
                 }
             },
 
@@ -755,7 +789,7 @@
             printLabel: function(id) { const a=this.data.apars.find(x=>String(x.id)==String(id)); if(!a)return; document.getElementById('printLabelKode').innerText=a.kode; document.getElementById('printLabelLokasi').innerText=a.lokasi; document.getElementById('printQrContainer').innerHTML=''; new QRCode(document.getElementById('printQrContainer'), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:120, height:120}); document.body.classList.add('printing-label'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-label');},500); },
             shareStatus: async function() { const el=document.getElementById('captureArea'); el.classList.add('capturing'); try { const cvs = await html2canvas(el, {scale:2}); const win = window.open(''); win.document.write(`<img src="${cvs.toDataURL()}">`); setTimeout(()=>win.print(),500); el.classList.remove('capturing'); } catch(e){alert('Gagal Print'); el.classList.remove('capturing');}},
             
-            // REVISI: Kompresi Gambar Lebih Agresif untuk Speed
+            // REVISI: Kompresi Gambar Lebih Agresif (30%) untuk Speed
             compressImage: function(file) { 
                 return new Promise((resolve) => { 
                     const reader = new FileReader(); 
@@ -765,13 +799,13 @@
                         img.src = event.target.result; 
                         img.onload = () => { 
                             const canvas = document.createElement('canvas'); 
-                            const maxWidth = 480; // Diperkecil dari 600
+                            const maxWidth = 480; 
                             const scaleSize = maxWidth / img.width; 
                             canvas.width = maxWidth; 
                             canvas.height = img.height * scaleSize; 
                             const ctx = canvas.getContext('2d'); 
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height); 
-                            resolve(canvas.toDataURL('image/jpeg', 0.3)); // Kualitas turun ke 30%
+                            resolve(canvas.toDataURL('image/jpeg', 0.3)); 
                         } 
                     } 
                 }); 
@@ -827,8 +861,8 @@
                 // REVISI: PENYIMPANAN LATAR BELAKANG (OPTIMISTIC UI)
                 const cd = { action: "addCheck", aparId: id, year: new Date(document.getElementById('inputCheckDate').value).getFullYear(), month: new Date(document.getElementById('inputCheckDate').value).getMonth(), timestamp: new Date(document.getElementById('inputCheckDate').value).toISOString(), isGood: allChecked, notes: fn, petugas: document.getElementById('inputPetugas').value.trim(), imageData: img }; 
                 
-                // 1. Tampilkan pesan sukses langsung
-                if(allChecked) { this.showToast("Terima kasih!", "green"); } else { this.showToast("Tersimpan!", "red"); }
+                // 1. Tampilkan Animasi Sukses Langsung
+                this.showSuccessAnimation();
                 
                 // 2. Simpan ke array lokal dulu agar UI update seketika
                 this.data.checks.push(cd);
@@ -837,7 +871,6 @@
                 // 3. Kirim data ke server di background (tanpa await/loading spinner)
                 this.sendData(cd).catch(err => {
                     console.error("Background sync failed, saving to offline queue");
-                    // Jika gagal, sendData sudah otomatis handle offline queue, jadi aman.
                 });
             },
             
