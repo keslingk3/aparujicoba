@@ -44,14 +44,7 @@
         /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
         
-        /* REVISI FINAL TAMPILAN TINDAK LANJUT (SERIOUS FIX) 
-           Rule ini menjamin jika class 'hidden' ada, elemen PASTI hilang,
-           tidak peduli mode apa yang sedang aktif. */
-        #tindakLanjutContainer.hidden { display: none !important; }
-        
-        /* Reset display untuk mode scan jika TIDAK hidden */
-        body.scan-mode #view-detail #tindakLanjutContainer.admin-only:not(.hidden) { display: block !important; }
-
+        /* FIX: Jangan mengatur display block via CSS untuk tindak lanjut, biarkan JS yang mengatur */
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
         body.scan-mode #view-add-apar .admin-only { display: block !important; } 
 
@@ -72,7 +65,6 @@
         <h2 class="text-xl font-bold text-gray-700">Sedang Memproses...</h2>
         <p class="text-sm text-gray-500" id="loadingText">Mohon tunggu sebentar ya</p>
     </div>
-    
     <div id="toast-msg"></div>
 
     <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-blue-900 to-blue-600 z-[100] flex items-center justify-center p-4 overflow-hidden">
@@ -630,14 +622,6 @@
             toggleLoading: function(s, t) { const o = document.getElementById('loadingOverlay'); if(s) { o.style.display = 'flex'; if(t) document.getElementById('loadingText').innerText = t; } else { o.style.display = 'none'; } },
             showToast: function(m, c) { let t = document.getElementById('toast-msg'); if(!t) { t=document.createElement('div'); t.id='toast-msg'; document.body.appendChild(t); } t.className = `fixed bottom-4 right-4 px-4 py-2 rounded bg-${c}-600 text-white text-sm shadow-lg z-50 fade-in`; t.innerText = m; t.style.display='block'; setTimeout(()=>t.style.display='none', 3000); },
             
-            showSuccessAnimation: function() { 
-                const overlay = document.getElementById('successAnimation'); 
-                overlay.style.display = 'flex'; 
-                setTimeout(() => { 
-                    overlay.style.display = 'none'; 
-                }, 1500); 
-            },
-
             navigate: function(id) { 
                 if(id==='dashboard') { document.getElementById('editAparId').value = ""; document.getElementById('formTitle').innerText="Tambah APAR Baru"; document.getElementById('btnSaveApar').innerText="Simpan Data"; document.getElementById('pageTitle').innerText = "BERANDA"; }
                 else if(id==='profile') { document.getElementById('pageTitle').innerText = "PROFIL USER"; this.renderProfile(); }
@@ -845,7 +829,7 @@
                 const cd = { action: "addCheck", aparId: id, year: new Date(document.getElementById('inputCheckDate').value).getFullYear(), month: new Date(document.getElementById('inputCheckDate').value).getMonth(), timestamp: new Date(document.getElementById('inputCheckDate').value).toISOString(), isGood: allChecked, notes: fn, petugas: document.getElementById('inputPetugas').value.trim(), imageData: img }; 
                 
                 // 1. Tampilkan Animasi Sukses Langsung
-                this.showSuccessAnimation();
+                if(allChecked) { this.showToast("Tersimpan!", "green"); } else { this.showToast("Tersimpan!", "red"); }
                 
                 // 2. Simpan ke array lokal dulu agar UI update seketika
                 this.data.checks.push(cd);
