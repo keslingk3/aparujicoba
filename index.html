@@ -44,14 +44,15 @@
         /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
         
-        /* REVISI LOGIKA POPUP TINDAK LANJUT: 
-           Hanya munculkan jika class 'hidden' TIDAK ada. 
-           Ini memperbaiki bug di mana popup muncul terus meski status Baik. */
-        body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: none; } 
+        /* REVISI PENTING: Perbaikan Logika Tampilan Tindak Lanjut 
+           Hanya tampilkan blok ini jika TIDAK ada class 'hidden'.
+           Jika JS menambahkan class 'hidden' (karena status baik), CSS ini tidak akan memaksa muncul.
+        */
+        body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: none; }
         body.scan-mode #view-detail #tindakLanjutContainer.admin-only:not(.hidden) { display: block !important; }
 
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
-        body.scan-mode #view-add-apar .admin-only { display: block !important; } /* Tombol save di form edit */
+        body.scan-mode #view-add-apar .admin-only { display: block !important; } 
 
         .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
         .inactive-nav { color: #64748b; }
@@ -823,12 +824,21 @@
                 const un = document.getElementById('inputNotes').value.trim(); 
                 let fn = anp + checklistText + (un ? " | Catatan: " + un : ""); 
                 
+                // REVISI: PENYIMPANAN LATAR BELAKANG (OPTIMISTIC UI)
                 const cd = { action: "addCheck", aparId: id, year: new Date(document.getElementById('inputCheckDate').value).getFullYear(), month: new Date(document.getElementById('inputCheckDate').value).getMonth(), timestamp: new Date(document.getElementById('inputCheckDate').value).toISOString(), isGood: allChecked, notes: fn, petugas: document.getElementById('inputPetugas').value.trim(), imageData: img }; 
-                const s = await this.sendData(cd); 
-                if(s) { 
-                    this.showDetail(id); 
-                    if(allChecked) { this.showToast("Terima kasih!", "green"); } else { this.showToast("Tersimpan!", "red"); } 
-                } 
+                
+                // 1. Tampilkan pesan sukses langsung
+                if(allChecked) { this.showToast("Terima kasih!", "green"); } else { this.showToast("Tersimpan!", "red"); }
+                
+                // 2. Simpan ke array lokal dulu agar UI update seketika
+                this.data.checks.push(cd);
+                this.showDetail(id);
+
+                // 3. Kirim data ke server di background (tanpa await/loading spinner)
+                this.sendData(cd).catch(err => {
+                    console.error("Background sync failed, saving to offline queue");
+                    // Jika gagal, sendData sudah otomatis handle offline queue, jadi aman.
+                });
             },
             
             editHistory: function(id, ts) { const c = this.data.checks.find(x => String(x.aparId) == String(id) && x.timestamp == ts); if(c) { this.data.historyToEdit = c; document.getElementById('editHistoryStatus').value = c.isGood; document.getElementById('editHistoryNote').value = c.notes; document.getElementById('editHistoryModal').classList.remove('hidden'); } },
