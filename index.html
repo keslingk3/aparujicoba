@@ -44,7 +44,14 @@
         /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
         
-        /* FIX: Jangan mengatur display block via CSS untuk tindak lanjut, biarkan JS yang mengatur */
+        /* === FIX KOTAK KUNING === 
+           CSS ini menjamin jika element memiliki class 'hidden', dia AKAN hilang
+           walaupun ada rule lain yang mencoba menampilkannya. */
+        #tindakLanjutContainer.hidden { display: none !important; }
+        
+        /* Tampilkan jika TIDAK ada class hidden saat mode scan */
+        body.scan-mode #view-detail #tindakLanjutContainer.admin-only:not(.hidden) { display: block !important; }
+
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
         body.scan-mode #view-add-apar .admin-only { display: block !important; } 
 
@@ -65,6 +72,7 @@
         <h2 class="text-xl font-bold text-gray-700">Sedang Memproses...</h2>
         <p class="text-sm text-gray-500" id="loadingText">Mohon tunggu sebentar ya</p>
     </div>
+    
     <div id="toast-msg"></div>
 
     <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-blue-900 to-blue-600 z-[100] flex items-center justify-center p-4 overflow-hidden">
@@ -529,8 +537,20 @@
                 try { const r = await fetch(API_URL + "?action=getData"); const j = await r.json(); this.data.apars = j.apars || []; this.data.checks = j.checks || []; this.data.movements = j.movements || []; localStorage.setItem('cached_apars', JSON.stringify(this.data.apars)); localStorage.setItem('cached_checks', JSON.stringify(this.data.checks)); this.renderDashboard(); document.getElementById('statusOnlineBadge').innerText = "ONLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-green-500 text-white px-1 py-0.5 rounded align-top"; this.checkNotifications(); } catch (err) { console.error("Fetch Error:", err); document.getElementById('statusOnlineBadge').innerText = "OFFLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-gray-500 text-white px-1 py-0.5 rounded align-top"; }
             },
             sendData: async function(p) {
-                if (!navigator.onLine) { this.saveToOfflineQueue(p); this.showToast("Tidak ada sinyal. Disimpan Offline.", "orange"); this.updateSyncButton(); return true; }
-                this.toggleLoading(true, "Menyimpan..."); try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) }); const j = await r.json(); if(j.status === 'success') { await this.fetchDataWithTimeout(); this.toggleLoading(false); this.showToast("Berhasil Disimpan!", "green"); return true; } else { throw new Error(j.message); } } catch (err) { this.toggleLoading(false); this.saveToOfflineQueue(p); this.showToast("Gagal kirim. Masuk antrean.", "orange"); this.updateSyncButton(); return true; }
+                // REVISI: Tidak ada loading screen yang memblokir
+                try { 
+                    const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) }); 
+                    const j = await r.json(); 
+                    if(j.status === 'success') { 
+                        // Sukses background
+                        return true; 
+                    } else { 
+                        throw new Error(j.message); 
+                    } 
+                } catch (err) { 
+                    this.saveToOfflineQueue(p); 
+                    return true; // Anggap sukses masuk antrean
+                }
             },
             saveToOfflineQueue: function(p) { const q = JSON.parse(localStorage.getItem('offlineQueue') || "[]"); q.push(p); localStorage.setItem('offlineQueue', JSON.stringify(q)); },
             updateSyncButton: function() { const q = JSON.parse(localStorage.getItem('offlineQueue') || "[]"); const b = document.getElementById('btnSync'); const c = document.getElementById('syncCount'); if (q.length > 0 && navigator.onLine) { b.classList.remove('hidden'); c.innerText = q.length; } else { b.classList.add('hidden'); } },
@@ -657,7 +677,7 @@
                 const lC = this.getLastCheck(id); const sB = document.getElementById('scanStatusBanner'); const tL = document.getElementById('tindakLanjutContainer'); const iE = new Date(apar.expiredDate) < new Date();
                 this.renderMiniHistory(id, 'detailHistoryBody'); this.renderMovementHistory(id); sB.classList.remove('hidden');
                 
-                // REVISI LOGIKA TINDAK LANJUT:
+                // REVISI LOGIKA TINDAK LANJUT (FORCE STYLE):
                 if (lC) { 
                     const isG = String(lC.isGood).toLowerCase() === 'true'; 
                     if (isG) { 
@@ -665,9 +685,9 @@
                         document.getElementById('scanStatusText').className = "text-2xl font-black text-green-700"; 
                         document.getElementById('scanStatusText').innerHTML = 'KONDISI BAIK <i class="fa-solid fa-circle-check"></i>'; 
                         
-                        // FIX: Paksa sembunyikan jika BAIK
+                        // FIX: Force hide dengan inline style priority
                         tL.classList.add('hidden'); 
-                        tL.style.display = 'none'; 
+                        tL.style.setProperty('display', 'none', 'important');
                     } else { 
                         if (lC.notes && lC.notes.includes('HARUS DIISI ULANG')) { 
                             sB.className = "mb-6 p-4 rounded-lg text-center bg-purple-100 border border-purple-300 animate-pulse"; 
@@ -679,7 +699,7 @@
                             document.getElementById('scanStatusText').innerHTML = 'KONDISI RUSAK <i class="fa-solid fa-circle-xmark"></i>'; 
                         } 
                         
-                        // FIX: Tampilkan jika RUSAK
+                        // FIX: Force show jika rusak
                         tL.classList.remove('hidden'); 
                         tL.style.display = 'block';
                     } 
@@ -688,9 +708,9 @@
                     sB.className = "mb-6 p-4 rounded-lg text-center bg-gray-100 border border-gray-300"; 
                     document.getElementById('scanStatusText').innerHTML = "BELUM ADA DATA"; 
                     
-                    // FIX: Sembunyikan jika belum ada data
+                    // FIX: Force hide jika belum ada data
                     tL.classList.add('hidden'); 
-                    tL.style.display = 'none';
+                    tL.style.setProperty('display', 'none', 'important');
                 }
             },
 
