@@ -43,7 +43,13 @@
         
         /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
-        body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: block !important; }
+        
+        /* REVISI LOGIKA POPUP TINDAK LANJUT: 
+           Hanya munculkan jika class 'hidden' TIDAK ada. 
+           Ini memperbaiki bug di mana popup muncul terus meski status Baik. */
+        body.scan-mode #view-detail #tindakLanjutContainer.admin-only { display: none; } 
+        body.scan-mode #view-detail #tindakLanjutContainer.admin-only:not(.hidden) { display: block !important; }
+
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
         body.scan-mode #view-add-apar .admin-only { display: block !important; } /* Tombol save di form edit */
 
@@ -654,9 +660,36 @@
                 this.navigate('detail'); document.getElementById('detailKode').innerText = apar.kode; document.getElementById('detailLokasi').innerText = apar.lokasi; document.getElementById('detailJenis').innerText = apar.jenis; document.getElementById('detailBerat').innerText = apar.berat + ' kg'; document.getElementById('detailRefill').innerText = apar.refillDate ? new Date(apar.refillDate).toLocaleDateString('id-ID') : '-'; document.getElementById('detailExpired').innerText = new Date(apar.expiredDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); document.getElementById('btnChecklistNow').onclick = () => this.showChecklistForm(id);
                 const lC = this.getLastCheck(id); const sB = document.getElementById('scanStatusBanner'); const tL = document.getElementById('tindakLanjutContainer'); const iE = new Date(apar.expiredDate) < new Date();
                 this.renderMiniHistory(id, 'detailHistoryBody'); this.renderMovementHistory(id); sB.classList.remove('hidden');
+                
+                // REVISI LOGIKA TINDAK LANJUT:
+                // Kita gunakan class 'hidden' untuk mengontrol visibilitas.
+                // CSS kita di atas sudah dikonfigurasi untuk menghormati class 'hidden' ini.
+                
                 if (lC) { 
-                    const isG = String(lC.isGood).toLowerCase() === 'true'; if (isG) { sB.className = "mb-6 p-4 rounded-lg text-center bg-green-100 border border-green-300"; document.getElementById('scanStatusText').className = "text-2xl font-black text-green-700"; document.getElementById('scanStatusText').innerHTML = 'KONDISI BAIK <i class="fa-solid fa-circle-check"></i>'; tL.classList.add('hidden'); } else { if (lC.notes && lC.notes.includes('HARUS DIISI ULANG')) { sB.className = "mb-6 p-4 rounded-lg text-center bg-purple-100 border border-purple-300 animate-pulse"; document.getElementById('scanStatusText').className = "text-2xl font-black text-purple-700"; document.getElementById('scanStatusText').innerHTML = 'APAR HARUS DIISI ULANG <i class="fa-solid fa-fill-drip"></i>'; } else { sB.className = "mb-6 p-4 rounded-lg text-center bg-red-100 border border-red-300 animate-pulse"; document.getElementById('scanStatusText').className = "text-2xl font-black text-red-700"; document.getElementById('scanStatusText').innerHTML = 'KONDISI RUSAK <i class="fa-solid fa-circle-xmark"></i>'; } tL.classList.remove('hidden'); } document.getElementById('scanStatusDate').innerText = "Cek Terakhir: " + new Date(lC.timestamp).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}); 
-                } else { sB.className = "mb-6 p-4 rounded-lg text-center bg-gray-100 border border-gray-300"; document.getElementById('scanStatusText').innerHTML = "BELUM ADA DATA"; tL.classList.add('hidden'); }
+                    const isG = String(lC.isGood).toLowerCase() === 'true'; 
+                    if (isG) { 
+                        sB.className = "mb-6 p-4 rounded-lg text-center bg-green-100 border border-green-300"; 
+                        document.getElementById('scanStatusText').className = "text-2xl font-black text-green-700"; 
+                        document.getElementById('scanStatusText').innerHTML = 'KONDISI BAIK <i class="fa-solid fa-circle-check"></i>'; 
+                        tL.classList.add('hidden'); // Sembunyikan jika baik
+                    } else { 
+                        if (lC.notes && lC.notes.includes('HARUS DIISI ULANG')) { 
+                            sB.className = "mb-6 p-4 rounded-lg text-center bg-purple-100 border border-purple-300 animate-pulse"; 
+                            document.getElementById('scanStatusText').className = "text-2xl font-black text-purple-700"; 
+                            document.getElementById('scanStatusText').innerHTML = 'APAR HARUS DIISI ULANG <i class="fa-solid fa-fill-drip"></i>'; 
+                        } else { 
+                            sB.className = "mb-6 p-4 rounded-lg text-center bg-red-100 border border-red-300 animate-pulse"; 
+                            document.getElementById('scanStatusText').className = "text-2xl font-black text-red-700"; 
+                            document.getElementById('scanStatusText').innerHTML = 'KONDISI RUSAK <i class="fa-solid fa-circle-xmark"></i>'; 
+                        } 
+                        tL.classList.remove('hidden'); // Tampilkan jika rusak/isi ulang
+                    } 
+                    document.getElementById('scanStatusDate').innerText = "Cek Terakhir: " + new Date(lC.timestamp).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}); 
+                } else { 
+                    sB.className = "mb-6 p-4 rounded-lg text-center bg-gray-100 border border-gray-300"; 
+                    document.getElementById('scanStatusText').innerHTML = "BELUM ADA DATA"; 
+                    tL.classList.add('hidden'); // Sembunyikan jika belum ada data (aman)
+                }
             },
 
             renderMiniHistory: function(id, tId) { 
@@ -720,7 +753,28 @@
             printAllLabels: function() { if(this.data.apars.length===0) return; const c = document.getElementById('printAllArea'); c.innerHTML=''; this.data.apars.forEach(a=>{ const d=document.createElement('div'); d.className='qr-card'; d.innerHTML=`<b>${a.kode}</b><div id="qr-${a.id}" style="display:flex;justify-content:center;margin:5px 0;"></div><small>${a.lokasi}</small>`; c.appendChild(d); new QRCode(d.querySelector(`#qr-${a.id}`), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:80, height:80}); }); document.body.classList.add('printing-all'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-all');},1000); },
             printLabel: function(id) { const a=this.data.apars.find(x=>String(x.id)==String(id)); if(!a)return; document.getElementById('printLabelKode').innerText=a.kode; document.getElementById('printLabelLokasi').innerText=a.lokasi; document.getElementById('printQrContainer').innerHTML=''; new QRCode(document.getElementById('printQrContainer'), {text:`${window.location.href.split('?')[0]}?id=${a.id}`, width:120, height:120}); document.body.classList.add('printing-label'); setTimeout(()=>{window.print(); document.body.classList.remove('printing-label');},500); },
             shareStatus: async function() { const el=document.getElementById('captureArea'); el.classList.add('capturing'); try { const cvs = await html2canvas(el, {scale:2}); const win = window.open(''); win.document.write(`<img src="${cvs.toDataURL()}">`); setTimeout(()=>win.print(),500); el.classList.remove('capturing'); } catch(e){alert('Gagal Print'); el.classList.remove('capturing');}},
-            compressImage: function(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const maxWidth = 600; const scaleSize = maxWidth / img.width; canvas.width = maxWidth; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.5)); } } }); },
+            
+            // REVISI: Kompresi Gambar Lebih Agresif untuk Speed
+            compressImage: function(file) { 
+                return new Promise((resolve) => { 
+                    const reader = new FileReader(); 
+                    reader.readAsDataURL(file); 
+                    reader.onload = (event) => { 
+                        const img = new Image(); 
+                        img.src = event.target.result; 
+                        img.onload = () => { 
+                            const canvas = document.createElement('canvas'); 
+                            const maxWidth = 480; // Diperkecil dari 600
+                            const scaleSize = maxWidth / img.width; 
+                            canvas.width = maxWidth; 
+                            canvas.height = img.height * scaleSize; 
+                            const ctx = canvas.getContext('2d'); 
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height); 
+                            resolve(canvas.toDataURL('image/jpeg', 0.3)); // Kualitas turun ke 30%
+                        } 
+                    } 
+                }); 
+            },
             
             submitChecklist: async function(e) { 
                 e.preventDefault(); 
