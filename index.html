@@ -44,8 +44,13 @@
         /* PAKSA MENU APAR MUNCUL (Edit, Pindah, Cetak, Ceklis) TANPA LOGIN */
         body.scan-mode #view-detail .admin-only { display: inline-flex !important; } 
         
-        /* CSS SAFETY NET: Pastikan kotak kuning benar-benar hilang jika ada class hidden */
+        /* REVISI FINAL TAMPILAN TINDAK LANJUT (SERIOUS FIX) 
+           Rule ini menjamin jika class 'hidden' ada, elemen PASTI hilang,
+           tidak peduli mode apa yang sedang aktif. */
         #tindakLanjutContainer.hidden { display: none !important; }
+        
+        /* Reset display untuk mode scan jika TIDAK hidden */
+        body.scan-mode #view-detail #tindakLanjutContainer.admin-only:not(.hidden) { display: block !important; }
 
         body.scan-mode #view-detail #btnChecklistNow.admin-only { display: flex !important; }
         body.scan-mode #view-add-apar .admin-only { display: block !important; } 
@@ -57,14 +62,6 @@
         #toast-msg { display: none; transition: opacity 0.5s ease; }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
         
-        /* === ANIMASI CEKLIS MEMUTAR (REVISI: TANPA TEKS) === */
-        #successAnimation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; display: none; justify-content: center; align-items: center; flex-direction: column; }
-        .checkmark-circle { width: 120px; height: 120px; border-radius: 50%; display: block; stroke-width: 2; stroke: #22c55e; stroke-miterlimit: 10; margin: 10% auto; box-shadow: inset 0px 0px 0px #22c55e; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
-        .checkmark-check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
-        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
-        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
-        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 60px #22c55e; } }
-
         @media print { body * { visibility: hidden; } body.printing-label #labelPrintArea, body.printing-label #labelPrintArea * { visibility: visible; } body.printing-label #labelPrintArea { position: absolute; left: 0; top: 0; width: 100%; display: flex; justify-content: center; align-items: center; padding-top: 20px; } body.printing-all #printAllArea, body.printing-all #printAllArea * { visibility: visible; } body.printing-all #printAllArea { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; } .qr-card { border: 1px solid #000; padding: 10px; text-align: center; page-break-inside: avoid; } body:not(.printing-label):not(.printing-all) .no-print { display: none !important; } }
     </style>
 </head>
@@ -76,13 +73,6 @@
         <p class="text-sm text-gray-500" id="loadingText">Mohon tunggu sebentar ya</p>
     </div>
     
-    <div id="successAnimation">
-        <svg class="checkmark-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle class="checkmark-circle-bg" cx="26" cy="26" r="25" fill="none"/>
-            <path class="checkmark-check" fill="none" stroke="#fff" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-        </svg>
-    </div>
-
     <div id="toast-msg"></div>
 
     <div id="login-screen" class="hidden fixed inset-0 bg-gradient-to-br from-blue-900 to-blue-600 z-[100] flex items-center justify-center p-4 overflow-hidden">
@@ -645,7 +635,7 @@
                 overlay.style.display = 'flex'; 
                 setTimeout(() => { 
                     overlay.style.display = 'none'; 
-                }, 2000); 
+                }, 1500); 
             },
 
             navigate: function(id) { 
@@ -683,10 +673,7 @@
                 const lC = this.getLastCheck(id); const sB = document.getElementById('scanStatusBanner'); const tL = document.getElementById('tindakLanjutContainer'); const iE = new Date(apar.expiredDate) < new Date();
                 this.renderMiniHistory(id, 'detailHistoryBody'); this.renderMovementHistory(id); sB.classList.remove('hidden');
                 
-                // --- REVISI FINAL LOGIKA TINDAK LANJUT ---
-                // Pastikan class 'hidden' ditambahkan/dihapus dengan benar.
-                // Dan gunakan inline style sebagai pengaman ganda.
-                
+                // REVISI LOGIKA TINDAK LANJUT:
                 if (lC) { 
                     const isG = String(lC.isGood).toLowerCase() === 'true'; 
                     if (isG) { 
