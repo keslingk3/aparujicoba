@@ -115,7 +115,7 @@
                 <p class="px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Main Menu</p>
                 <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition active-nav"><i class="fa-solid fa-house w-5 text-center"></i> Beranda</button>
                 
-                <a href="https://keslingk3.github.io/apkpelaporanujicoba/admin" target="_blank" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition inactive-nav">
+                <a href="https://keslingk3.github.io/apkpelaporanujicoba/admin" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition inactive-nav">
                     <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard Laporan K3
                 </a>
                 
@@ -823,33 +823,78 @@
                 sy.innerHTML = ''; const cy = new Date().getFullYear(); for(let i=cy; i>=cy-2; i--) { const opt = document.createElement('option'); opt.value = i; opt.text = i; sy.appendChild(opt); }
             },
 
+            // --- REVISI: EXPORT EXCEL DENGAN LINK MENGARAH KE DETAIL APLIKASI ---
             processExport: function() {
                 const m = parseInt(document.getElementById('exportMonth').value);
                 const y = parseInt(document.getElementById('exportYear').value);
                 const mName = this.data.fullMonths[m];
-                const checks = this.data.checks.filter(c => parseInt(c.month) === m && parseInt(c.year) === y);
                 const moves = this.data.movements.filter(mv => { const d = new Date(mv.timestamp); return d.getMonth() === m && d.getFullYear() === y; });
 
-                let tableHTML = `<html><head><meta charset='UTF-8'></head><body><h2 style="text-align:center">LAPORAN BULANAN APAR - ${mName.toUpperCase()} ${y}</h2><h3 style="text-align:center">RS MARZOEKI MAHDI BOGOR</h3><br><h3>1. HASIL PEMERIKSAAN (INSPEKSI)</h3><table border="1" style="border-collapse: collapse; width: 100%;"><thead style="background-color: #e2e8f0;"><tr><th>TANGGAL</th><th>KODE APAR</th><th>LOKASI</th><th>JENIS</th><th>STATUS</th><th>KETERANGAN</th><th>PETUGAS</th></tr></thead><tbody>`;
+                let tableHTML = `<html><head><meta charset='UTF-8'></head><body><h2 style="text-align:center">LAPORAN BULANAN APAR - ${mName.toUpperCase()} ${y}</h2><h3 style="text-align:center">RS MARZOEKI MAHDI BOGOR</h3><br><h3>1. HASIL PEMERIKSAAN (INSPEKSI)</h3><table border="1" style="border-collapse: collapse; width: 100%;"><thead style="background-color: #e2e8f0;"><tr><th>TANGGAL</th><th>KODE APAR</th><th>LOKASI</th><th>JENIS</th><th>STATUS</th><th>KETERANGAN</th><th>PETUGAS</th><th>DOKUMENTASI</th></tr></thead><tbody>`;
                 
-                if(checks.length === 0) { tableHTML += `<tr><td colspan="7" style="text-align:center;">Tidak ada data inspeksi bulan ini.</td></tr>`; } else {
-                   checks.forEach(c => {
-                        const apar = this.data.apars.find(a => String(a.id) === String(c.aparId)); 
-                        const kode = apar ? apar.kode : 'APAR Terhapus'; 
-                        const loc = apar ? apar.lokasi : '-'; 
-                        const jns = apar ? apar.jenis : '-'; 
-                        let status = 'RUSAK'; let color = 'red';
-                        if (String(c.isGood) === 'true') { status = 'BAIK'; color = 'green'; } 
-                        else if (c.notes && c.notes.includes('HARUS DIISI ULANG')) { status = 'HARUS DIISI ULANG'; color = '#9333ea'; }
-                        tableHTML += `<tr><td>${new Date(c.timestamp).toLocaleDateString('id-ID')}</td><td>${kode}</td><td>${loc}</td><td>${jns}</td><td style="color:${color}; font-weight:bold;">${status}</td><td>${c.notes}</td><td>${c.petugas}</td></tr>`;
+                if (this.data.apars.length === 0) { 
+                    tableHTML += `<tr><td colspan="8" style="text-align:center;">Tidak ada data APAR.</td></tr>`; 
+                } else {
+                    this.data.apars.forEach(apar => {
+                        // Cari apakah APAR ini dicek pada bulan & tahun yang dipilih
+                        const c = this.data.checks.find(chk => String(chk.aparId) === String(apar.id) && parseInt(chk.month) === m && parseInt(chk.year) === y);
+                        
+                        const kode = apar.kode || '-'; 
+                        const loc = apar.lokasi || '-'; 
+                        const jns = apar.jenis || '-'; 
+                        
+                        let tgl = '-';
+                        let status = 'BELUM CEK'; 
+                        let color = 'gray';
+                        let notes = '-';
+                        let petugas = '-';
+                        let fotoHtml = '-';
+
+                        if (c) {
+                            tgl = new Date(c.timestamp).toLocaleDateString('id-ID');
+                            notes = c.notes || '-';
+                            petugas = c.petugas || '-';
+                            
+                            if (String(c.isGood) === 'true') { 
+                                status = 'BAIK'; color = 'green'; 
+                            } else if (c.notes && c.notes.includes('HARUS DIISI ULANG')) { 
+                                status = 'HARUS DIISI ULANG'; color = '#9333ea'; 
+                            } else {
+                                status = 'RUSAK'; color = 'red';
+                            }
+
+                            // JIKA ADA FOTO, BUAT LINK MENGARAH KE APLIKASI WEB
+                            if (c.imageData && c.imageData.trim() !== '') {
+                                const detailUrl = window.location.href.split('?')[0] + '?id=' + apar.id;
+                                fotoHtml = `<a href="${detailUrl}" target="_blank" style="color: blue; text-decoration: underline; font-weight: bold;">Lihat di Aplikasi</a>`;
+                            }
+                        }
+                        
+                        tableHTML += `<tr><td>${tgl}</td><td>${kode}</td><td>${loc}</td><td>${jns}</td><td style="color:${color}; font-weight:bold;">${status}</td><td>${notes}</td><td>${petugas}</td><td style="text-align:center;">${fotoHtml}</td></tr>`;
                     });
                 }
+                
                 tableHTML += `</tbody></table><br><br><h3>2. RIWAYAT PERPINDAHAN APAR</h3><table border="1" style="border-collapse: collapse; width: 100%;"><thead style="background-color: #fff7ed;"><tr><th>TANGGAL</th><th>KODE APAR</th><th>DARI LOKASI</th><th>KE LOKASI</th><th>PETUGAS</th></tr></thead><tbody>`;
-                if(moves.length === 0) { tableHTML += `<tr><td colspan="5" style="text-align:center;">Tidak ada perpindahan bulan ini.</td></tr>`; } else {
-                    moves.forEach(mv => { const apar = this.data.apars.find(a => String(a.id) === String(mv.aparId)); const kode = apar ? apar.kode : 'APAR Terhapus'; tableHTML += `<tr><td>${new Date(mv.timestamp).toLocaleDateString('id-ID')}</td><td>${kode}</td><td>${mv.oldLocation}</td><td>${mv.newLocation}</td><td>${mv.petugas}</td></tr>`; });
+                if(moves.length === 0) { 
+                    tableHTML += `<tr><td colspan="5" style="text-align:center;">Tidak ada perpindahan bulan ini.</td></tr>`; 
+                } else {
+                    moves.forEach(mv => { 
+                        const apar = this.data.apars.find(a => String(a.id) === String(mv.aparId)); 
+                        const kode = apar ? apar.kode : 'APAR Terhapus'; 
+                        tableHTML += `<tr><td>${new Date(mv.timestamp).toLocaleDateString('id-ID')}</td><td>${kode}</td><td>${mv.oldLocation}</td><td>${mv.newLocation}</td><td>${mv.petugas}</td></tr>`; 
+                    });
                 }
                 tableHTML += `</tbody></table></body></html>`;
-                const blob = new Blob([tableHTML], { type: 'application/vnd.ms-excel' }); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Laporan_APAR_${mName}_${y}.xls`; document.body.appendChild(a); a.click(); document.body.removeChild(a); document.getElementById('exportModal').classList.add('hidden');
+                
+                const blob = new Blob([tableHTML], { type: 'application/vnd.ms-excel' }); 
+                const url = window.URL.createObjectURL(blob); 
+                const a = document.createElement('a'); 
+                a.href = url; 
+                a.download = `Laporan_APAR_${mName}_${y}.xls`; 
+                document.body.appendChild(a); 
+                a.click(); 
+                document.body.removeChild(a); 
+                document.getElementById('exportModal').classList.add('hidden');
             },
 
             // --- FUNGSI EXPORT BARU UNTUK REKAPAN MASALAH ---
