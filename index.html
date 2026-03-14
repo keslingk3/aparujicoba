@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
@@ -118,11 +118,10 @@
                 <button onclick="window.location.href='https://keslingk3.github.io/apkpelaporanujicoba/admin'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition inactive-nav text-left">
                     <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard Laporan K3
                 </button>
-                
-                <div class="admin-only space-y-2">
-                    <button onclick="app.navigate('profile')" id="nav-profile" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition inactive-nav"><i class="fa-solid fa-user-tie w-5 text-center"></i> Profil User</button>
-                    <button onclick="app.navigate('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition inactive-nav"><i class="fa-solid fa-gear w-5 text-center"></i> Pengaturan</button>
-                </div>
+
+                <button onclick="window.location.href='MASUKKAN_LINK_WEB_IPAL_ANDA_DISINI'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition inactive-nav text-left">
+                    <img src="icon-ipal.png" alt="Icon IPAL" class="w-5 h-5 object-contain opacity-70"> Dashboard Monitoring Swapantau IPAL
+                </button>
             </div>
             <div class="p-6 border-t border-gray-100"><button onclick="app.handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 transition shadow-sm"><i class="fa-solid fa-power-off"></i>Logout</button><div class="text-center mt-4 text-[10px] text-gray-300 font-medium">© 2026 Instalasi K3KL</div></div>
         </aside>
@@ -137,11 +136,35 @@
                     <div><h2 class="text-2xl font-bold tracking-tight" id="pageTitle">BERANDA</h2><p class="text-blue-200 text-xs md:text-sm font-medium">Sistem Informasi Pelaporan & Monitoring APAR</p></div>
                 </div>
                 <div class="mt-4 md:mt-0 flex flex-col items-end">
-                    <div class="flex items-center gap-3 mb-1.5">
-                        <div class="text-right"><span class="block text-xs text-blue-200">Halo, <span id="headerUserName" class="block text-sm font-bold leading-none">Guest</span></div>
-                        <img id="headerProfileImg" src="" class="w-10 h-10 rounded-full border border-white/20 object-cover shadow-sm bg-white" alt="Profile">
+                    
+                    <div class="relative z-50">
+                        <button id="btnProfileDropdown" onclick="app.toggleProfileDropdown(event)" class="flex items-center gap-3 mb-1.5 focus:outline-none hover:opacity-80 transition text-right">
+                            <div><span class="block text-xs text-blue-200">Halo, <span id="headerUserName" class="block text-sm font-bold leading-none">Guest</span></span></div>
+                            <img id="headerProfileImg" src="" class="w-10 h-10 rounded-full border border-white/20 object-cover shadow-sm bg-white cursor-pointer" alt="Profile">
+                        </button>
+                        
+                        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 transform origin-top-right transition-all">
+                            <div class="px-4 py-2 border-b border-gray-50 mb-1">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Menu Pengguna</p>
+                            </div>
+                            <button onclick="app.navigate('profile'); app.toggleProfileDropdown(event)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-3 font-medium admin-only">
+                                <i class="fa-solid fa-user-tie w-5 text-center"></i> Profil User
+                            </button>
+                            <button onclick="app.navigate('settings'); app.toggleProfileDropdown(event)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-3 font-medium admin-only">
+                                <i class="fa-solid fa-gear w-5 text-center"></i> Pengaturan
+                            </button>
+                            <button onclick="app.navigate('settings'); app.toggleProfileDropdown(event)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-3 font-medium">
+                                <i class="fa-solid fa-circle-info w-5 text-center"></i> Tentang Aplikasi
+                            </button>
+                            <div class="border-t border-gray-50 mt-1 pt-1">
+                                <button onclick="app.handleLogout(); app.toggleProfileDropdown(event)" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-3 font-bold">
+                                    <i class="fa-solid fa-power-off w-5 text-center"></i> Logout
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3 text-[10px] md:text-xs text-blue-100 bg-blue-800/30 px-3 py-1.5 rounded-full border border-blue-500/30"><span id="headerDate"><i class="fa-regular fa-calendar mr-1"></i> -</span><span class="w-px h-3 bg-blue-500/50 mx-1"></span><span id="clockDisplay" class="font-mono font-bold text-yellow-300"><i class="fa-regular fa-clock mr-1"></i> --:--</span><span id="statusOnlineBadge" class="ml-2"></span></div>
+
+                    <div class="flex items-center gap-3 text-[10px] md:text-xs text-blue-100 bg-blue-800/30 px-3 py-1.5 rounded-full border border-blue-500/30 mt-1"><span id="headerDate"><i class="fa-regular fa-calendar mr-1"></i> -</span><span class="w-px h-3 bg-blue-500/50 mx-1"></span><span id="clockDisplay" class="font-mono font-bold text-yellow-300"><i class="fa-regular fa-clock mr-1"></i> --:--</span><span id="statusOnlineBadge" class="ml-2"></span></div>
                 </div>
                 <div class="absolute bottom-[-24px] right-8 flex gap-3">
                      <button id="btnSync" onclick="app.syncOfflineData()" class="hidden bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-xl animate-pulse border-2 border-white hover:bg-yellow-300 transition"><i class="fa-solid fa-rotate"></i> Sync Data <span id="syncCount" class="bg-red-600 text-white px-1.5 rounded-full text-[10px]">0</span></button>
@@ -197,7 +220,8 @@
                             <div id="dashboardMovements" class="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scroll"></div>
                         </div>
                     </div>
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-md p-5 rounded-2xl shadow-md border border-gray-100 sticky top-4 z-30 transition-shadow">
                         <div class="flex flex-wrap gap-3 w-full md:w-auto">
                             <select id="yearFilter" onchange="app.renderDashboard()" class="border border-gray-200 p-2.5 rounded-lg text-sm font-bold bg-gray-50 focus:outline-blue-500 focus:bg-white transition"></select>
                             <select id="monthFilter" onchange="app.renderDashboard()" class="border border-gray-200 p-2.5 rounded-lg text-sm font-bold bg-gray-50 focus:outline-blue-500 focus:bg-white transition"></select>
@@ -211,9 +235,24 @@
                             <button onclick="app.resetDatabase()" class="bg-white text-red-600 px-5 py-2.5 rounded-lg border border-red-200 hover:bg-red-50 transition text-xs font-bold admin-only flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Reset</button>
                         </div>
                     </div>
+                    
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                        <div class="bg-blue-50 text-blue-600 text-[10px] font-bold px-4 py-2 flex items-center justify-center gap-2 block md:hidden border-b border-blue-100">
+                            <i class="fa-solid fa-arrows-left-right animate-pulse"></i> Geser tabel ke kanan-kiri untuk melihat detail
+                        </div>
                         <div class="overflow-x-auto"><table class="min-w-full" id="dataTable"><thead class="bg-gray-50/80 text-gray-500 uppercase text-[11px] font-extrabold tracking-wider"><tr><th class="py-5 px-6 text-left">Kode APAR</th><th class="py-5 px-6 text-left">Lokasi</th><th class="py-5 px-6 text-center">Jenis APAR</th><th class="py-5 px-6 text-center">Tanggal Isi</th><th class="py-5 px-6 text-center">Expired</th><th class="py-5 px-6 text-center">Status</th><th class="py-5 px-6 text-center admin-only">Aksi</th></tr></thead><tbody id="aparTableBody" class="text-gray-700 text-sm font-medium divide-y divide-gray-100"></tbody></table></div>
-                        <div id="emptyState" class="hidden text-center py-16 text-gray-400"><div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse"><i class="fa-solid fa-clipboard-list text-3xl text-gray-300"></i></div><p class="font-medium">Data tidak ditemukan.</p></div>
+                        
+                        <div id="emptyState" class="hidden text-center py-16 text-gray-400">
+                            <div class="relative w-24 h-24 mx-auto mb-6">
+                                <div class="absolute inset-0 bg-blue-50 rounded-full animate-ping opacity-50"></div>
+                                <div class="relative bg-white border-4 border-gray-50 w-24 h-24 rounded-full flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-folder-open text-4xl text-gray-300"></i>
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-gray-600 mb-1">Belum Ada Data</h4>
+                            <p class="text-sm font-medium text-gray-400">Coba sesuaikan filter pencarian atau tambahkan data APAR baru.</p>
+                        </div>
+                        
                         <div class="flex justify-between items-center p-5 bg-gray-50 border-t border-gray-100"><span class="text-xs text-gray-500 font-bold" id="paginationInfo">Loading data...</span><div class="flex gap-2"><button onclick="app.changePage(-1)" class="bg-white border hover:bg-gray-100 text-gray-600 px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50 shadow-sm" id="btnPrev">Prev</button><button onclick="app.changePage(1)" class="bg-white border hover:bg-gray-100 text-gray-600 px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50 shadow-sm" id="btnNext">Next</button></div></div>
                     </div>
                 </div>
@@ -303,11 +342,11 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                            <div><span class="block text-gray-400 text-[10px] font-bold uppercase mb-1">Jenis</span><span id="detailJenis" class="font-bold text-gray-800 text-lg"></span></div>
-                            <div><span class="block text-gray-400 text-[10px] font-bold uppercase mb-1">Berat</span><span id="detailBerat" class="font-bold text-gray-800 text-lg"></span></div>
-                            <div><span class="block text-gray-400 text-[10px] font-bold uppercase mb-1">Tgl Isi</span><span id="detailRefill" class="font-bold text-gray-800"></span></div>
-                            <div><span class="block text-gray-400 text-[10px] font-bold uppercase mb-1">Kadaluarsa</span><span id="detailExpired" class="font-bold text-red-600"></span></div>
+                        <div class="grid grid-cols-2 gap-4 text-sm bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100"><span class="block text-gray-400 text-[10px] font-extrabold uppercase mb-1 tracking-wider">Jenis</span><span id="detailJenis" class="font-black text-gray-900 text-lg"></span></div>
+                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100"><span class="block text-gray-400 text-[10px] font-extrabold uppercase mb-1 tracking-wider">Berat</span><span id="detailBerat" class="font-black text-gray-900 text-lg"></span></div>
+                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100"><span class="block text-gray-400 text-[10px] font-extrabold uppercase mb-1 tracking-wider">Tgl Isi</span><span id="detailRefill" class="font-bold text-gray-700"></span></div>
+                            <div class="bg-red-50 p-3 rounded-xl border border-red-100"><span class="block text-red-400 text-[10px] font-extrabold uppercase mb-1 tracking-wider">Kadaluarsa</span><span id="detailExpired" class="font-black text-red-600"></span></div>
                         </div>
 
                         <div class="mt-8">
@@ -367,7 +406,7 @@
                             <div id="evidenceContainer" class="hidden mb-8 bg-red-50 p-6 rounded-2xl border-2 border-dashed border-red-300 text-center">
                                 <div class="mb-3 text-red-400 text-3xl"><i class="fa-solid fa-camera"></i></div>
                                 <label class="block text-red-800 text-sm font-bold mb-2 uppercase tracking-wide">Wajib Foto Bukti Kerusakan</label>
-                                <input type="file" id="evidencePhoto" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-white file:text-red-600 hover:file:bg-red-100 cursor-pointer">
+                                <input type="file" id="evidencePhoto" accept="image/*" capture="environment" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-white file:text-red-600 hover:file:bg-red-100 cursor-pointer">
                             </div>
 
                             <div class="mb-8"><label class="block text-gray-500 text-xs font-bold uppercase mb-2">Catatan Tambahan</label><textarea id="inputNotes" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 h-28 text-sm resize-none transition" placeholder="Tulis keterangan jika ada kerusakan..."></textarea></div>
@@ -649,7 +688,23 @@
             },
             renderDashboardMovements: function() { const c = document.getElementById('dashboardMovements'); c.innerHTML = ''; const m = [...this.data.movements].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5); if(m.length === 0) { c.innerHTML = '<div class="text-xs text-gray-400 italic text-center p-2">Belum ada riwayat perpindahan.</div>'; return; } m.forEach(x => { const a = this.data.apars.find(z => String(z.id) == String(x.aparId)); const k = a ? a.kode : 'APAR Terhapus'; c.innerHTML += `<div class="flex items-center gap-3 text-xs border-b border-gray-100 pb-2 p-1 hover:bg-orange-50 rounded"><div class="bg-orange-100 text-orange-600 p-1.5 rounded-full"><i class="fa-solid fa-arrow-right-arrow-left"></i></div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-gray-700">${k}</span><span class="text-[10px] text-gray-400">${new Date(x.timestamp).toLocaleDateString('id-ID')}</span></div><div class="flex items-center gap-1 mt-0.5"><span class="line-through text-red-400">${x.oldLocation}</span><i class="fa-solid fa-arrow-right text-[8px] text-gray-400"></i><span class="font-bold text-green-600">${x.newLocation}</span></div></div></div>`; }); },
             toggleNotifications: function(e) { e.stopPropagation(); document.getElementById('notifDropdown').classList.toggle('hidden'); },
-            closeDropdown: function(e) { if (!document.getElementById('notifDropdown').contains(e.target) && !document.getElementById('btnNotif').contains(e.target)) { document.getElementById('notifDropdown').classList.add('hidden'); } },
+            toggleProfileDropdown: function(e) { 
+                e.stopPropagation(); 
+                document.getElementById('profileDropdown').classList.toggle('hidden'); 
+            },
+            closeDropdown: function(e) { 
+                const pd = document.getElementById('profileDropdown');
+                const btnPd = document.getElementById('btnProfileDropdown');
+                if (pd && btnPd && !pd.contains(e.target) && !btnPd.contains(e.target)) {
+                    pd.classList.add('hidden');
+                }
+                
+                const nd = document.getElementById('notifDropdown');
+                const btnNd = document.getElementById('btnNotif');
+                if (nd && btnNd && !nd.contains(e.target) && !btnNd.contains(e.target)) { 
+                    nd.classList.add('hidden'); 
+                } 
+            },
             checkNotifications: function() { 
                 const b = document.getElementById('notifBadge'); const l = document.getElementById('notifList'); if (!b || !l) return;
                 l.innerHTML = ''; let c = 0; const t = new Date(); this.data.apars.forEach(a => { const e = new Date(a.expiredDate); const d = Math.ceil((e - t) / (1000 * 60 * 60 * 24)); if (d < 0 && !this.isDismissed('exp', a.id)) { c++; this.addNotifItem(l, 'bg-red-50 border-red-200', 'text-red-700', 'KADALUARSA', `APAR ${a.kode} sudah lewat tanggal kadaluarsa!`, a.id, 'exp'); } else if (d < 30 && d >= 0 && !this.isDismissed('expwarn', a.id)) { c++; this.addNotifItem(l, 'bg-yellow-50 border-yellow-200', 'text-yellow-700', 'AKAN KADALUARSA', `APAR ${a.kode} expired dalam ${d} hari.`, a.id, 'expwarn'); } const lc = this.getLastCheck(a.id); if (lc && String(lc.isGood) === 'false' && !this.isDismissed('dmg', a.id)) { c++; this.addNotifItem(l, 'bg-orange-50 border-orange-200', 'text-orange-700', 'KONDISI RUSAK', `APAR ${a.kode} dilaporkan RUSAK. Butuh perbaikan.`, a.id, 'dmg'); } const cm = this.data.checks.some(k => String(k.aparId) == String(a.id) && k.month == t.getMonth() && k.year == t.getFullYear()); if (!cm && t.getDate() > 20 && !this.isDismissed('uncheck', a.id)) { c++; this.addNotifItem(l, 'bg-blue-50 border-blue-200', 'text-blue-700', 'BELUM DICEK', `APAR ${a.kode} belum dicek bulan ini.`, a.id, 'uncheck'); } }); if (c > 0) { b.classList.remove('hidden'); b.innerText = c; } else { b.classList.add('hidden'); l.innerHTML = '<div class="p-8 text-center text-sm text-gray-400 italic">Semua Aman!</div>'; } },
