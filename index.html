@@ -477,8 +477,8 @@
     <div id="labelPrintArea" class="hidden bg-white p-4 border border-gray-800 w-[300px] text-center mx-auto"><h2 class="text-lg font-bold uppercase mb-1 border-b border-black pb-1">KARTU INSPEKSI APAR</h2><h3 class="text-xs mb-2">RSJMM BOGOR</h3><div id="printQrContainer" class="flex justify-center my-2"></div><div class="text-xl font-black my-1" id="printLabelKode"></div><div class="text-sm italic" id="printLabelLokasi"></div><div class="text-[10px] mt-2 border-t pt-1">Scan untuk update status & cek riwayat</div></div><div id="printAllArea" class="hidden"></div>
 
     <script>
-        // ⚠️ PASTE URL GOOGLE APPS SCRIPT ANDA DI SINI:
-        const API_URL = "https://script.google.com/macros/s/AKfycbyXE4dIgQ7rRDLn9HWuMJ4YL8SS28id9OpZIKMtQUZiwRnJaINdilmrd6OuxG1JyclkWQ/exec"; 
+        // 🚀 URL FIREBASE ANDA
+        const firebaseUrl = "https://k3kl-monitor-default-rtdb.asia-southeast1.firebasedatabase.app"; 
         
         const app = {
             data: { apars: [], checks: [], movements: [], dismissed: JSON.parse(localStorage.getItem('dismissed')) || [], months: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"], fullMonths: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"], currentPage: 1, itemsPerPage: 10, currentDetailId: null, historyToEdit: null, pendingScanAction: null, pendingScanId: null },
@@ -499,22 +499,42 @@
                 }
             },
 
+            // 🚀 MESIN LOGIN FIREBASE UNTUK WEB
             handleLogin: async function(e) { 
-                e.preventDefault(); const u = document.getElementById('loginUser').value; const p = document.getElementById('loginPass').value; this.toggleLoading(true, "Memeriksa Database...");
-                try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) }); const j = await r.json();
-                    if (j.status === 'success') { localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', j.role); localStorage.setItem('petugasName', j.petugasName); localStorage.setItem('petugasId', u); 
-                        if(j.photoUrl) localStorage.setItem('petugasPhoto', this.formatPhotoUrl(j.photoUrl)); else localStorage.removeItem('petugasPhoto'); 
-                        if(j.petugasName) document.getElementById('inputPetugas').value = j.petugasName; document.getElementById('login-screen').classList.add('hidden');
-                        
-                        // Jika Login dari Scan, masuk ke Detail Dulu
-                        if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { 
-                            if (this.data.apars.length === 0) { await this.fetchDataWithTimeout(); } 
-                            this.data.pendingScanAction = null; 
-                            document.getElementById('main-app').classList.remove('hidden'); 
-                            this.showDetail(this.data.pendingScanId); 
-                        } else { this.init(); }
-                    } else { alert(j.message || 'Login Gagal!'); }
-                } catch (err) { console.error(err); alert('Login sukses.'); } finally { this.toggleLoading(false); }
+                e.preventDefault(); const u = document.getElementById('loginUser').value.trim(); const p = document.getElementById('loginPass').value; this.toggleLoading(true, "Memeriksa Database...");
+                try { 
+                    const r = await fetch(firebaseUrl + "/USERS.json"); 
+                    const j = await r.json();
+                    let found = false;
+                    if (j) {
+                        Object.keys(j).forEach(key => {
+                            let v = j[key];
+                            let dbUser = String(v.username || v.Username || "");
+                            let dbPass = String(v.password || v.Password || "");
+                            let dbRole = String(v.role || v.Role || "User");
+                            let dbName = String(v.nama_lengkap || v.Nama_Lengkap || v.username || "Petugas");
+                            
+                            if (dbUser === u && dbPass === p) {
+                                found = true;
+                                localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', dbRole); localStorage.setItem('petugasName', dbName); localStorage.setItem('petugasId', u); localStorage.setItem('firebaseUserKey', key);
+                                if(v.foto_profil || v.photoUrl) localStorage.setItem('petugasPhoto', this.formatPhotoUrl(v.foto_profil || v.photoUrl)); else localStorage.removeItem('petugasPhoto'); 
+                                if(dbName) document.getElementById('inputPetugas').value = dbName; document.getElementById('login-screen').classList.add('hidden');
+                                
+                                if (this.data.pendingScanAction === 'inspect' && this.data.pendingScanId) { 
+                                    if (this.data.apars.length === 0) { this.fetchDataWithTimeout(); } 
+                                    this.data.pendingScanAction = null; 
+                                    document.getElementById('main-app').classList.remove('hidden'); 
+                                    this.showDetail(this.data.pendingScanId); 
+                                } else { this.init(); }
+                            }
+                        });
+                    }
+                    if (!found && u==="admin" && p==="admin123") {
+                        localStorage.setItem('isLoggedIn', 'true'); localStorage.setItem('userRole', 'Admin'); localStorage.setItem('petugasName', 'Kepala K3KL'); document.getElementById('login-screen').classList.add('hidden'); this.init();
+                    } else if (!found) {
+                        alert('Username atau Password salah!');
+                    }
+                } catch (err) { console.error(err); alert('Koneksi Error. Pastikan internet stabil.'); } finally { this.toggleLoading(false); }
             },
             cancelLogin: function() { document.getElementById('login-screen').classList.add('hidden'); const scanId = new URLSearchParams(window.location.search).get('id'); if (scanId) { document.getElementById('scan-choice-screen').classList.remove('hidden'); } else { document.getElementById('login-screen').classList.remove('hidden'); } },
             
@@ -527,6 +547,7 @@
                 localStorage.removeItem('petugasName'); 
                 localStorage.removeItem('petugasId'); 
                 localStorage.removeItem('petugasPhoto'); 
+                localStorage.removeItem('firebaseUserKey');
                 location.reload();
             },
             
@@ -535,7 +556,6 @@
                 const localApars = localStorage.getItem('cached_apars'); const localChecks = localStorage.getItem('cached_checks');
                 if (localApars) { try { this.data.apars = JSON.parse(localApars); this.data.checks = JSON.parse(localChecks || "[]"); } catch(e) {} }
                 
-                // --- LOGIKA UTAMA SCAN ID ---
                 if (scanId) { 
                     document.body.classList.add('scan-mode');
                     document.getElementById('main-app').classList.remove('hidden');
@@ -580,16 +600,48 @@
                 this.navigate('dashboard');
             },
 
+            // 🚀 MESIN PENARIK DATA DARI FIREBASE 
             fetchDataWithTimeout: async function() {
-                try { const r = await fetch(API_URL + "?action=getData"); const j = await r.json(); this.data.apars = j.apars || []; this.data.checks = j.checks || []; this.data.movements = j.movements || []; localStorage.setItem('cached_apars', JSON.stringify(this.data.apars)); localStorage.setItem('cached_checks', JSON.stringify(this.data.checks)); this.renderDashboard(); document.getElementById('statusOnlineBadge').innerText = "ONLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-green-500 text-white px-1 py-0.5 rounded align-top"; this.checkNotifications(); } catch (err) { console.error("Fetch Error:", err); document.getElementById('statusOnlineBadge').innerText = "OFFLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-gray-500 text-white px-1 py-0.5 rounded align-top"; }
+                try { 
+                    const rApar = await fetch(firebaseUrl + "/APAR_DATA.json"); const jApar = await rApar.json(); 
+                    this.data.apars = jApar ? Object.keys(jApar).map(k => { let o = jApar[k]; o.firebaseKey = k; return o; }) : []; 
+                    
+                    const rCheck = await fetch(firebaseUrl + "/CHECK_HISTORY.json"); const jCheck = await rCheck.json(); 
+                    this.data.checks = jCheck ? Object.keys(jCheck).map(k => { let o = jCheck[k]; o.firebaseKey = k; return o; }) : []; 
+                    
+                    const rMove = await fetch(firebaseUrl + "/MOVEMENT_HISTORY.json"); const jMove = await rMove.json(); 
+                    this.data.movements = jMove ? Object.values(jMove) : []; 
+                    
+                    localStorage.setItem('cached_apars', JSON.stringify(this.data.apars)); 
+                    localStorage.setItem('cached_checks', JSON.stringify(this.data.checks)); 
+                    this.renderDashboard(); 
+                    document.getElementById('statusOnlineBadge').innerText = "ONLINE"; 
+                    document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-green-500 text-white px-1 py-0.5 rounded align-top"; 
+                    this.checkNotifications(); 
+                } catch (err) { 
+                    console.error("Fetch Error:", err); document.getElementById('statusOnlineBadge').innerText = "OFFLINE"; document.getElementById('statusOnlineBadge').className = "text-[10px] font-normal bg-gray-500 text-white px-1 py-0.5 rounded align-top"; 
+                }
             },
+            
+            // 🚀 MESIN PENGIRIM DATA KE FIREBASE 
             sendData: async function(p) {
-                try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) }); const j = await r.json(); if(j.status === 'success') { return true; } else { throw new Error(j.message); } } catch (err) { this.saveToOfflineQueue(p); return true; }
+                try { 
+                    let url = firebaseUrl; let method = 'POST'; let bodyData = {...p}; delete bodyData.action;
+                    if (p.action === 'addApar') { url += '/APAR_DATA.json'; }
+                    else if (p.action === 'editApar') { const a = this.data.apars.find(x => String(x.id) === String(p.id)); if(a && a.firebaseKey) { url += '/APAR_DATA/' + a.firebaseKey + '.json'; method = 'PATCH'; } else { throw new Error('Key not found'); } }
+                    else if (p.action === 'deleteApar') { const a = this.data.apars.find(x => String(x.id) === String(p.id)); if(a && a.firebaseKey) { url += '/APAR_DATA/' + a.firebaseKey + '.json'; method = 'DELETE'; bodyData = null; } }
+                    else if (p.action === 'addCheck' || p.action === 'saveCheck' || p.action === 'editCheck') { url += '/CHECK_HISTORY.json'; } 
+                    else if (p.action === 'moveApar') { const a = this.data.apars.find(x => String(x.id) === String(p.id)); if(a && a.firebaseKey) { await fetch(firebaseUrl + '/APAR_DATA/' + a.firebaseKey + '.json', { method: 'PATCH', body: JSON.stringify({lokasi: p.newLokasi}) }); } url += '/MOVEMENT_HISTORY.json'; }
+                    else if (p.action === 'changeAccount') { const key = localStorage.getItem('firebaseUserKey'); if(key) { url += '/USERS/' + key + '.json'; method = 'PATCH'; bodyData = {password: p.newPass}; if(p.newUser) bodyData.username = p.newUser;} }
+                    
+                    const r = await fetch(url, { method: method, body: bodyData ? JSON.stringify(bodyData) : null }); 
+                    if(r.ok) { return true; } else { throw new Error('Failed'); } 
+                } catch (err) { this.saveToOfflineQueue(p); return true; }
             },
             saveToOfflineQueue: function(p) { const q = JSON.parse(localStorage.getItem('offlineQueue') || "[]"); q.push(p); localStorage.setItem('offlineQueue', JSON.stringify(q)); },
             updateSyncButton: function() { const q = JSON.parse(localStorage.getItem('offlineQueue') || "[]"); const b = document.getElementById('btnSync'); const c = document.getElementById('syncCount'); if (q.length > 0 && navigator.onLine) { b.classList.remove('hidden'); c.innerText = q.length; } else { b.classList.add('hidden'); } },
-            syncOfflineData: async function() { const q = JSON.parse(localStorage.getItem('offlineQueue') || "[]"); if (q.length === 0) return; if(!confirm(`Ada ${q.length} data offline. Kirim?`)) return; this.toggleLoading(true, "Sync..."); let sc = 0; const nq = []; for (let i = 0; i < q.length; i++) { try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(q[i]) }); const j = await r.json(); if(j.status === 'success') { sc++; } else { nq.push(q[i]); } } catch (e) { nq.push(q[i]); } } localStorage.setItem('offlineQueue', JSON.stringify(nq)); await this.fetchDataWithTimeout(); this.updateSyncButton(); this.toggleLoading(false); alert(`${sc} Terkirim. Sisa: ${nq.length}`); },
-            resetDatabase: async function() { if(localStorage.getItem('userRole') !== 'Admin') { alert('Hanya ADMIN!'); return; } const p = prompt("Password ADMIN:"); if (p === "admin123") { if(confirm("YAKIN HAPUS SEMUA?")) { const s = await this.sendData({ action: "resetDatabase" }); if(s) { localStorage.removeItem('cached_apars'); localStorage.removeItem('cached_checks'); localStorage.removeItem('dismissed'); alert("Reset Berhasil."); location.reload(); } } } else if (p!==null) { alert("Password Salah!"); } },
+            syncOfflineData: async function() { const q = JSON.parse(localStorage.getItem('offlineQueue') || "[]"); if (q.length === 0) return; if(!confirm(`Ada ${q.length} data offline. Kirim?`)) return; this.toggleLoading(true, "Sync..."); let sc = 0; const nq = []; for (let i = 0; i < q.length; i++) { try { const s = await this.sendData(q[i]); if(s) { sc++; } else { nq.push(q[i]); } } catch (e) { nq.push(q[i]); } } localStorage.setItem('offlineQueue', JSON.stringify(nq)); await this.fetchDataWithTimeout(); this.updateSyncButton(); this.toggleLoading(false); alert(`${sc} Terkirim. Sisa: ${nq.length}`); },
+            resetDatabase: async function() { if(localStorage.getItem('userRole') !== 'Admin') { alert('Hanya ADMIN!'); return; } const p = prompt("Password ADMIN:"); if (p === "admin123") { if(confirm("YAKIN HAPUS SEMUA DATA APAR? (User & Laporan tidak dihapus)")) { await fetch(firebaseUrl + '/APAR_DATA.json', {method: 'DELETE'}); await fetch(firebaseUrl + '/CHECK_HISTORY.json', {method: 'DELETE'}); await fetch(firebaseUrl + '/MOVEMENT_HISTORY.json', {method: 'DELETE'}); localStorage.removeItem('cached_apars'); localStorage.removeItem('cached_checks'); localStorage.removeItem('dismissed'); alert("Reset Berhasil."); location.reload(); } } else if (p!==null) { alert("Password Salah!"); } },
 
             changePage: function(d) { this.data.currentPage += d; this.renderDashboard(); },
             renderDashboard: function() {
@@ -613,7 +665,7 @@
                 });
                 
                 let sTotal=fApars.length, sChecked=0, sGood=0, sBad=0, cPow=0, cCo2=0, cFoam=0, cClean=0;
-                let cExp = 0, cRusak = 0, cRefill = 0; // COUNTER BARU
+                let cExp = 0, cRusak = 0, cRefill = 0; 
 
                 fApars.forEach(a => {
                     const j = (a.jenis || '').toLowerCase(); if(j.includes('powder')) cPow++; else if(j.includes('co2')) cCo2++; else if(j.includes('foam')) cFoam++; else cClean++;
@@ -622,17 +674,14 @@
                     else { const curC = this.data.checks.find(c => String(c.aparId) === String(a.id) && c.year == new Date().getFullYear() && c.month == new Date().getMonth()); if(curC) sChecked++; tC = this.getLastCheck(a.id); }
                     if(tC) { String(tC.isGood)==='true' ? sGood++ : sBad++; }
 
-                    // LOGIKA BARU: HITUNG EXPIRED, RUSAK FISIK, ISI ULANG
-                    // 1. Cek Expired
                     if (new Date(a.expiredDate) < new Date()) { cExp++; }
 
-                    // 2. Cek Status Terkini (Rusak/Isi Ulang) berdasarkan inspeksi terakhir
                     const lastC = this.getLastCheck(a.id);
                     if (lastC && String(lastC.isGood) === 'false') {
                          if (lastC.notes && lastC.notes.includes('HARUS DIISI ULANG')) {
                              cRefill++;
                          } else {
-                             cRusak++; // Rusak Fisik biasa
+                             cRusak++; 
                          }
                     }
                 });
@@ -640,7 +689,6 @@
                 document.getElementById('statTotal').innerText = sTotal; document.getElementById('statChecked').innerText = sChecked; document.getElementById('statGood').innerText = sGood; document.getElementById('statBad').innerText = sBad;
                 document.getElementById('countPowder').innerText = cPow; document.getElementById('countCo2').innerText = cCo2; document.getElementById('countFoam').innerText = cFoam; document.getElementById('countClean').innerText = cClean;
                 
-                // UPDATE STATISTIK BARU DI DASHBOARD
                 document.getElementById('countExpired').innerText = cExp;
                 document.getElementById('countRusak').innerText = cRusak;
                 document.getElementById('countRefill').innerText = cRefill;
@@ -801,7 +849,6 @@
                             <div class="text-xs italic text-gray-600 mt-1">"${x.notes}"</div>
                             <div class="text-[10px] text-gray-500 font-bold mt-1"><i class="fa-solid fa-user-tag mr-1"></i> ${x.petugas || '-'}</div>
                         </div>
-                        <button onclick="app.editHistory('${id}', '${x.timestamp}')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white border shadow-sm p-1 rounded text-blue-500 hover:text-blue-700 transition admin-only"><i class="fa-solid fa-pen text-xs"></i></button>
                     </div>`; 
                 }); 
             },
@@ -857,8 +904,6 @@
                 this.sendData(cd).catch(err => { console.error("Background sync failed, saving to offline queue"); });
             },
             
-            editHistory: function(id, ts) { const c = this.data.checks.find(x => String(x.aparId) == String(id) && x.timestamp == ts); if(c) { this.data.historyToEdit = c; document.getElementById('editHistoryStatus').value = c.isGood; document.getElementById('editHistoryNote').value = c.notes; document.getElementById('editHistoryModal').classList.remove('hidden'); } },
-            saveEditedHistory: async function() { if(!this.data.historyToEdit) return; const p = { action: "editCheck", aparId: this.data.historyToEdit.aparId, timestamp: this.data.historyToEdit.timestamp, isGood: document.getElementById('editHistoryStatus').value, notes: document.getElementById('editHistoryNote').value }; await this.sendData(p); document.getElementById('editHistoryModal').classList.add('hidden'); this.showDetail(this.data.historyToEdit.aparId); },
             showTindakLanjutModal: function() { document.getElementById('tindakLanjutModal').classList.remove('hidden'); },
             submitTindakLanjut: async function() { const id = this.data.currentDetailId; const p = { action: "addCheck", aparId: id, year: new Date().getFullYear(), month: new Date().getMonth(), timestamp: new Date().toISOString(), isGood: true, notes: "TINDAK LANJUT: " + document.getElementById('tlNote').value, petugas: document.getElementById('tlPetugas').value }; await this.sendData(p); document.getElementById('tindakLanjutModal').classList.add('hidden'); this.showDetail(id); },
             editCurrentApar: function() { const id = this.data.currentDetailId; const a = this.data.apars.find(x => String(x.id) == String(id)); if(!a) return; document.getElementById('editAparId').value = a.id; document.getElementById('inputKode').value = a.kode; document.getElementById('inputLokasi').value = a.lokasi; document.getElementById('inputJenis').value = a.jenis; document.getElementById('inputBerat').value = a.berat; document.getElementById('inputRefill').value = a.refillDate ? new Date(a.refillDate).toISOString().split('T')[0] : ''; document.getElementById('inputExpired').value = new Date(a.expiredDate).toISOString().split('T')[0]; document.getElementById('formTitle').innerText = "Edit Data APAR"; document.getElementById('btnSaveApar').innerText = "Update"; this.navigate('add-apar'); },
@@ -878,7 +923,6 @@
                 sy.innerHTML = ''; const cy = new Date().getFullYear(); for(let i=cy; i>=cy-2; i--) { const opt = document.createElement('option'); opt.value = i; opt.text = i; sy.appendChild(opt); }
             },
 
-            // --- REVISI: EXPORT EXCEL DENGAN LINK MENGARAH KE DETAIL APLIKASI ---
             processExport: function() {
                 const m = parseInt(document.getElementById('exportMonth').value);
                 const y = parseInt(document.getElementById('exportYear').value);
@@ -891,7 +935,6 @@
                     tableHTML += `<tr><td colspan="8" style="text-align:center;">Tidak ada data APAR.</td></tr>`; 
                 } else {
                     this.data.apars.forEach(apar => {
-                        // Cari apakah APAR ini dicek pada bulan & tahun yang dipilih
                         const c = this.data.checks.find(chk => String(chk.aparId) === String(apar.id) && parseInt(chk.month) === m && parseInt(chk.year) === y);
                         
                         const kode = apar.kode || '-'; 
@@ -918,7 +961,6 @@
                                 status = 'RUSAK'; color = 'red';
                             }
 
-                            // JIKA ADA FOTO, BUAT LINK MENGARAH KE APLIKASI WEB
                             if (c.imageData && c.imageData.trim() !== '') {
                                 const detailUrl = window.location.href.split('?')[0] + '?id=' + apar.id;
                                 fotoHtml = `<a href="${detailUrl}" target="_blank" style="color: blue; text-decoration: underline; font-weight: bold;">Lihat di Aplikasi</a>`;
@@ -952,17 +994,14 @@
                 document.getElementById('exportModal').classList.add('hidden');
             },
 
-            // --- FUNGSI EXPORT BARU UNTUK REKAPAN MASALAH ---
             processProblemExport: function() {
                 const now = new Date();
                 const problemApars = [];
 
                 this.data.apars.forEach(a => {
                     let issue = [];
-                    // 1. Cek Expired
                     if (new Date(a.expiredDate) < now) { issue.push("EXPIRED"); }
 
-                    // 2. Cek Status Terkini (Rusak/Refill)
                     const lastC = this.getLastCheck(a.id);
                     if (lastC && String(lastC.isGood) === 'false') {
                         if (lastC.notes && lastC.notes.includes('HARUS DIISI ULANG')) { issue.push("HARUS DIISI ULANG"); }
